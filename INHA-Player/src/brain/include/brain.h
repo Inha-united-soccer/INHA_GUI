@@ -50,6 +50,7 @@
 #include "goalie_decision.h"
 #include "role_manager.h"
 #include "pass_receive.h"
+#include "pass.h"
 
 // Forward declaration to avoid circular dependency
 class BrainCommunication;
