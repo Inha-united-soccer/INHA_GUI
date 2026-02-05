@@ -69,7 +69,7 @@
                                     min_msec_kick="1000" msecs_stablize="1000" kick_type="clearing" />
                         </ReactiveSequence>
 
-                        <OffTheBall _while="decision == 'return'" stop_threshold="0.15" v_limit="0.6"/>
+                        <OfftheballPosition _while="decision == 'return'" stop_threshold="0.15" v_limit="0.6"/>
                         
                         <SetVelocity _while="decision == 'wait'"/>
 
