@@ -2,7 +2,7 @@
 #define IS_LEAD_H
 
 #include "behaviortree_cpp/behavior_tree.h"
-#include "../../brain.h"
+#include "brain.h"
 
 // Condition Node: IsLead
 // Returns SUCCESS if this robot is the "Lead" (e.g. closest to ball)

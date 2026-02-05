@@ -2,7 +2,7 @@
 #define ACTION_WAIT_H
 
 #include "behaviortree_cpp/behavior_tree.h"
-#include "../../brain.h"
+#include "brain.h"
 #include <thread>
 #include <chrono>
 

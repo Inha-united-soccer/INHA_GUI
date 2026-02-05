@@ -2,7 +2,7 @@
 #define CHECK_BALL_DIST_H
 
 #include "behaviortree_cpp/behavior_tree.h"
-#include "../../brain.h"
+#include "brain.h"
 
 // Condition Node: CheckBallDist
 // Returns SUCCESS if ball distance satisfies the condition (LT < dist or GT > dist)
