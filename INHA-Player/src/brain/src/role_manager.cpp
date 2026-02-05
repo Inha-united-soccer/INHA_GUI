@@ -1,12 +1,12 @@
 #include "brain.h"
 #include "brain_tree.h"
-#include "behaviortree_cpp_v3/behavior_tree.h"
+#include "behaviortree_cpp/behavior_tree.h"
 
 using namespace BT;
 
 class RoleManager : public BrainTreeNode {
 public:
-    RoleManager(const std::string& name, const NodeCompilation& config, Brain* brain)
+    RoleManager(const std::string& name, const NodeConfiguration& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {

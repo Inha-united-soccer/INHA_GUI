@@ -1,7 +1,7 @@
 #ifndef ACTION_WAIT_H
 #define ACTION_WAIT_H
 
-#include "behaviortree_cpp_v3/action_node.h"
+#include "behaviortree_cpp/behavior_tree.h"
 #include "../../brain.h"
 #include <thread>
 #include <chrono>

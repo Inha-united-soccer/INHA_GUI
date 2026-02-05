@@ -1,7 +1,7 @@
 #ifndef STRATEGY_NODES_H
 #define STRATEGY_NODES_H
 
-#include "behaviortree_cpp_v3/bt_factory.h"
+#include "behaviortree_cpp/bt_factory.h"
 #include "../../brain.h"
 
 // Include our new nodes

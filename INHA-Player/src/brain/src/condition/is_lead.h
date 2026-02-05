@@ -1,7 +1,7 @@
 #ifndef IS_LEAD_H
 #define IS_LEAD_H
 
-#include "behaviortree_cpp_v3/action_node.h"
+#include "behaviortree_cpp/behavior_tree.h"
 #include "../../brain.h"
 
 // Condition Node: IsLead

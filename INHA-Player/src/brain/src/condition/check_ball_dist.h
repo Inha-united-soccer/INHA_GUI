@@ -1,7 +1,7 @@
 #ifndef CHECK_BALL_DIST_H
 #define CHECK_BALL_DIST_H
 
-#include "behaviortree_cpp_v3/action_node.h"
+#include "behaviortree_cpp/behavior_tree.h"
 #include "../../brain.h"
 
 // Condition Node: CheckBallDist
