@@ -12,6 +12,17 @@ class Brain;
 using namespace std;
 using namespace BT;
 
+// Base class for Brain nodes
+class BrainTreeNode : public BT::SyncActionNode
+{
+public:
+    BrainTreeNode(const std::string& name, const BT::NodeConfiguration& config, Brain* brain)
+        : BT::SyncActionNode(name, config), brain(brain) {}
+
+protected:
+    Brain* brain;
+};
+
 class BrainTree
 {
 public:
