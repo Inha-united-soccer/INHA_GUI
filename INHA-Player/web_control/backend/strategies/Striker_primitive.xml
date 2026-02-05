@@ -1,5 +1,5 @@
 <root main_tree_to_execute="MainTree">
- <BehaviorTree ID="MainTree">
+ <BehaviorTree ID="Striker">
   <Fallback name="Sel">
    <!-- 1. Very Close: Just KICK blindly -->
    <Sequence name="Seq_Kick">

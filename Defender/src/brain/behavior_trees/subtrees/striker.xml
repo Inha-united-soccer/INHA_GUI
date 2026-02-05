@@ -13,7 +13,7 @@
          
          <!-- 상대 킥오프 대기 -->
          <ReactiveSequence _while="wait_for_opponent_kickoff" name="상대 팀 킥오프 대기"> 
-            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
             <SetVelocity />
          </ReactiveSequence>
          
@@ -22,7 +22,7 @@
             
             <!-- 공이 아웃된 경우 -->
             <Sequence _while="ball_out">
-               <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+               <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
                <GoBackInField />
                <SubTree ID="Locate" _autoremap="true" _while="decision!='find'" />
             </Sequence>
@@ -31,7 +31,7 @@
             <ReactiveSequence _while="!ball_out">
                <ReactiveSequence>
                   <!-- 공 추적 -->
-                  <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                  <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
                   
                   <!-- 킥 방향 개선 (골키퍼 고려) -->
                   <CalcKickDirWithGoalkeeper cross_threshold="0.5" goalkeeper_margin="0.5" />
@@ -42,7 +42,7 @@
                         <StrikerDecide decision_out="{decision}" decision_in="{decision}" chase_threshold="1.0" /> <!-- one_touch_enabled="true" 원터치 활성화 -->
                         
                         <!-- 공 찾기 -->
-                        <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
+                        <!-- <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" /> -->
                      </ReactiveSequence>
                      
                      <!-- 행동 실행 -->

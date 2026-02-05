@@ -34,7 +34,7 @@
                             <SetVelocity x="0.0" y="0.0" theta="0.0" />
                             <!--CamScanField _while="!odom_calibrated"/-->
                             <!--SubTree ID="CamFindAndTrackBall" _while="odom_calibrated" _autoremap="true" /-->
-                            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
                             <SelfLocateEnterField />
                         </ReactiveSequence>
 
@@ -46,12 +46,12 @@
 
                         <ReactiveSequence _while="gc_game_state=='SET'" name="Set">
                             <SetVelocity x="0.0" y="0.0" theta="0.0" />
-                            <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> 
+                            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" />  -->
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
-                            <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                            <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
                             <ReactiveSequence>
                                 <!-- <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" /> -->
                                 <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
@@ -74,7 +74,7 @@
                     </ReactiveSequence>
 
                     <ReactiveSequence _while="gc_game_sub_state=='SET'">
-                        <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
+                        <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
                         <SubTree ID="Locate" _autoremap="true" _while="ball_location_known" />
                         <SetVelocity />
                     </ReactiveSequence>

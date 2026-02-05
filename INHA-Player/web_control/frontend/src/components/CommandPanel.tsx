@@ -50,7 +50,7 @@ const CommandPanel = ({ robotId }: CommandPanelProps) => {
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => sendCommand('SCRIPT=$(find ~ -name start.sh | head -n 1); if [ -n "$SCRIPT" ]; then echo "Running $SCRIPT"; LOG_PATH="/home/booster/Workspace/INHA_Soccer/INHA-Player/brain_log.txt"; nohup bash "$SCRIPT" > "$LOG_PATH" 2>&1 & echo "Logs -> $LOG_PATH"; else echo "start.sh not found!"; fi')}
+                    onClick={() => sendCommand('cd /home/booster/Workspace/Soccer || echo "Dir not found"; source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; nohup ./scripts/start.sh > brain_nohup.log 2>&1 & echo "Executed start.sh from $PWD"')}
                 >
                     START PROGRAM
                 </Button>
@@ -67,6 +67,13 @@ const CommandPanel = ({ robotId }: CommandPanelProps) => {
                     onClick={() => sendCommand('echo "123456" | sudo -S reboot')}
                 >
                     REBOOT
+                </Button>
+                <Button
+                    variant="outlined"
+                    color="info"
+                    onClick={() => sendCommand('cd /home/booster/Workspace/Soccer; echo "=== brain_nohup.log ==="; tail -n 20 brain_nohup.log; echo "\\n=== brain.log ==="; tail -n 20 brain.log')}
+                >
+                    CHECK LOGS
                 </Button>
             </Box>
 
