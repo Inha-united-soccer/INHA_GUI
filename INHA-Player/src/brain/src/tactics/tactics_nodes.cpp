@@ -15,6 +15,7 @@ void RegisterTacticsNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
     REGISTER_TACTICS_BUILDER(TacticSelector);
     REGISTER_TACTICS_BUILDER(TacticPressing);
     REGISTER_TACTICS_BUILDER(TacticLineDefense);
+    REGISTER_TACTICS_BUILDER(TacticFinishing);
     REGISTER_TACTICS_BUILDER(TacticTempoControl);
     REGISTER_TACTICS_BUILDER(TacticAllOut);
     REGISTER_TACTICS_BUILDER(TacticCounterAttack);
