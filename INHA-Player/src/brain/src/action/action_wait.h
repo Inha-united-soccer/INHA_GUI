@@ -8,7 +8,7 @@
 
 class ActionWait : public BT::SyncActionNode {
 public:
-    ActionWait(const std::string& name, const BT::NodeConfiguration& config, std::shared_ptr<Brain> brain)
+    ActionWait(const std::string& name, const BT::NodeConfiguration& config, Brain* brain)
         : BT::SyncActionNode(name, config), brain_(brain) {}
 
     static BT::PortsList providedPorts() {
@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Brain> brain_;
+    Brain* brain_;
 };
 
 #endif

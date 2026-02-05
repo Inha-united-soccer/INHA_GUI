@@ -8,7 +8,7 @@
 // Returns SUCCESS if this robot is the "Lead" (e.g. closest to ball)
 class IsLead : public BT::ConditionNode {
 public:
-    IsLead(const std::string& name, const BT::NodeConfiguration& config, std::shared_ptr<Brain> brain)
+    IsLead(const std::string& name, const BT::NodeConfiguration& config, Brain* brain)
         : BT::ConditionNode(name, config), brain_(brain) {}
 
     static BT::PortsList providedPorts() {
@@ -27,14 +27,14 @@ public:
         // No, let's stick to name.
         
         // Hack for now: Assume always true for testing, or check simplistic logic
-        string role = brain_->blackboard->get<string>("player_role");
+        string role = brain_->tree->getEntry<string>("player_role");
         if (role == "striker") return BT::NodeStatus::SUCCESS;
         
         return BT::NodeStatus::FAILURE;
     }
 
 private:
-    std::shared_ptr<Brain> brain_;
+    Brain* brain_;
 };
 
 #endif

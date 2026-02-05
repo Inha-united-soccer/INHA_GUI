@@ -9,7 +9,7 @@
 #include "../condition/is_lead.h"
 #include "../action/action_wait.h"
 
-inline void RegisterStrategyNodes(BT::BehaviorTreeFactory& factory, std::shared_ptr<Brain> brain) {
+inline void RegisterStrategyNodes(BT::BehaviorTreeFactory& factory, Brain* brain) {
     factory.registerBuilder<CheckBallDist>("CheckBallDist", 
         [brain](const std::string& name, const BT::NodeConfiguration& config) {
             return std::make_unique<CheckBallDist>(name, config, brain);

@@ -4,7 +4,7 @@
 #include "behaviortree_cpp/bt_factory.h"
 #include "brain.h"
 
-inline void RegisterTacticsNodes(BT::BehaviorTreeFactory& factory, std::shared_ptr<Brain> brain) {
+inline void RegisterTacticsNodes(BT::BehaviorTreeFactory& factory, Brain* brain) {
     // No tactics nodes yet
 }
 

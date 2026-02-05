@@ -8,7 +8,7 @@
 // Returns SUCCESS if ball distance satisfies the condition (LT < dist or GT > dist)
 class CheckBallDist : public BT::ConditionNode {
 public:
-    CheckBallDist(const std::string& name, const BT::NodeConfiguration& config, std::shared_ptr<Brain> brain)
+    CheckBallDist(const std::string& name, const BT::NodeConfiguration& config, Brain* brain)
         : BT::ConditionNode(name, config), brain_(brain) {}
 
     static BT::PortsList providedPorts() {
@@ -32,7 +32,7 @@ public:
         // 2. Get current ball distance from Blackboard or Brain
         // Using Blackboard entry "ball_range" which is updated in brain_tree.cpp
         // But better to access brain_->ball_range directly if available, or blackboard
-        auto ball_range = brain_->blackboard->get<double>("ball_range");
+        auto ball_range = brain_->data->ball.range;
         
         // 3. Compare
         bool result = false;
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Brain> brain_;
+    Brain* brain_;
 };
 
 #endif
