@@ -79,6 +79,11 @@ def connect_robot(config: RobotConfig):
 @app.post("/api/command")
 def send_command(command: Command):
     print(f"[API] Command request: {command.cmd} -> {command.robot_id}")
+    
+    # [Log Modification] User requested brain.log at root
+    if "brain_nohup.log" in command.cmd:
+        command.cmd = command.cmd.replace("brain_nohup.log", "brain.log")
+        print("[API] Redirected output to brain.log")
     stdout, stderr = ssh_manager.execute_command(command.robot_id, command.cmd)
     if stdout is None:
         raise HTTPException(status_code=500, detail=stderr)
