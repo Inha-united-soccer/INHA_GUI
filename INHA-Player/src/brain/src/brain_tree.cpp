@@ -49,7 +49,36 @@ void BrainTree::init(){
     
     
     factory.registerBehaviorTreeFromFile(brain->config->treeFilePath);
-    tree = factory.createTree("MainTree");
+    
+    // Smart Tree Selection Logic (Same as reloadTree)
+    auto registered_trees = factory.registeredBehaviorTrees();
+    std::string target_tree_id = "MainTree";
+    bool found = false;
+    
+    // 1. Check for standard IDs
+    std::vector<std::string> priorities = {"MainTree", "Striker", "Defender", "Goalkeeper", "Goalie", "StrategyTree"};
+    for (const auto& p : priorities) {
+        for (const auto& t : registered_trees) {
+            if (t == p) {
+                target_tree_id = p;
+                found = true;
+                break;
+            }
+        }
+        if (found) break;
+    }
+
+    // 2. Fallback
+    if (!found && !registered_trees.empty()) {
+        target_tree_id = registered_trees[0];
+    }
+    
+    if (registered_trees.empty()) {
+        std::cerr << "[BrainTree] ERROR: No behavior trees found in " << brain->config->treeFilePath << std::endl;
+        // Fallback to avoid immediate crash if possible, or let it crash on createTree
+    }
+
+    tree = factory.createTree(target_tree_id);
 
     // 여기서 블랙보드가 초기화됨
     initEntry();
@@ -115,7 +144,37 @@ void BrainTree::reloadTree(std::string path) {
     
     try {
         factory.registerBehaviorTreeFromFile(path);
-        tree = factory.createTree("MainTree");
+        
+        // Smart Tree Selection Logic
+        auto registered_trees = factory.registeredBehaviorTrees();
+        std::string target_tree_id = "MainTree"; // Default
+        bool found = false;
+
+        if (registered_trees.empty()) {
+            throw std::runtime_error("No behavior trees found in XML file");
+        }
+
+        // 1. Check for specific Role-based IDs
+        std::vector<std::string> priorities = {"MainTree", "Striker", "Defender", "Goalkeeper", "Goalie", "StrategyTree"};
+        for (const auto& p : priorities) {
+            for (const auto& t : registered_trees) {
+                if (t == p) {
+                    target_tree_id = p;
+                    found = true;
+                    break;
+                }
+            }
+            if (found) break;
+        }
+
+        // 2. Fallback: Use the first one found
+        if (!found) {
+            target_tree_id = registered_trees[0];
+            std::cout << "[BrainTree] Warning: No standard tree ID found. Using: " << target_tree_id << std::endl;
+        }
+
+        std::cout << "[BrainTree] Creating tree with ID: " << target_tree_id << std::endl;
+        tree = factory.createTree(target_tree_id);
         std::cout << "[BrainTree] Successfully reloaded tree!" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "[BrainTree] Failed to reload tree: " << e.what() << std::endl;
