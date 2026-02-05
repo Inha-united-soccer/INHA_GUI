@@ -9,7 +9,7 @@ using namespace BT;
 // From decision_role.cpp
 class GoalieDecide : public BrainTreeNode {
 public:
-    GoalieDecide(const std::string& name, const NodeCompilation& config, Brain* brain)
+    GoalieDecide(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -29,7 +29,7 @@ public:
 
 class GoalieClearingDecide : public BrainTreeNode {
 public:
-    GoalieClearingDecide(const std::string& name, const NodeCompilation& config, Brain* brain)
+    GoalieClearingDecide(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -50,7 +50,7 @@ public:
 // From clearing.cpp
 class CalcClearingDir : public BrainTreeNode {
 public:
-    CalcClearingDir(const std::string& name, const NodeCompilation& config, Brain* brain)
+    CalcClearingDir(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -65,7 +65,7 @@ public:
 
 class ClearingChase : public BrainTreeNode {
 public:
-    ClearingChase(const std::string& name, const NodeCompilation& config, Brain* brain)
+    ClearingChase(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -85,7 +85,7 @@ public:
 // From hold.cpp
 class PredictBallTraj : public BrainTreeNode {
 public:
-    PredictBallTraj(const std::string& name, const NodeCompilation& config, Brain* brain)
+    PredictBallTraj(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -123,7 +123,7 @@ private:
 
 class CalcGoliePos : public BrainTreeNode {
 public:
-    CalcGoliePos(const std::string& name, const NodeCompilation& config, Brain* brain)
+    CalcGoliePos(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -139,7 +139,7 @@ public:
 
 class GolieMove : public BrainTreeNode {
 public:
-    GolieMove(const std::string& name, const NodeCompilation& config, Brain* brain)
+    GolieMove(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
@@ -161,7 +161,7 @@ public:
 
 class GolieInitPos : public BrainTreeNode {
 public:
-    GolieInitPos(const std::string& name, const NodeCompilation& config, Brain* brain)
+    GolieInitPos(const std::string& name, const NodeConfig& config, Brain* brain)
         : BrainTreeNode(name, config, brain) {}
 
     static PortsList providedPorts() {
