@@ -233,7 +233,7 @@ NodeStatus CalcDefenderClearingDir::tick() {
     // Let's use ball for safety if emaball is not guaranteed in Striker brain data struct, 
     // BUT if Unified means merging all, I assume brain_data.h is consistent.
     // Accessing emaball from brain->data.
-    auto ballPos = brain->data->emaball.posToField; 
+    auto ballPos = brain->data->ball.posToField; 
     auto opponents = brain->data->getRobots();
 
     int nearestIdx = -1;
@@ -269,7 +269,7 @@ NodeStatus CalcDefenderClearingDir::tick() {
     brain->log->log(
         "field/clearing_dir",
         rerun::Arrows2D::from_vectors({{10 * cos(brain->data->kickDir), -10 * sin(brain->data->kickDir)}})
-            .with_origins({{ballPos.x, -ballPos.y}})
+            .with_origins({{(float)ballPos.x, (float)-ballPos.y}})
             .with_colors({0x00FF00FF})
             .with_radii(0.01)
             .with_draw_order(31)
