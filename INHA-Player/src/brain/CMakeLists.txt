@@ -64,6 +64,7 @@ set(SOURCE_FILES
   src/role_manager.cpp
   src/striker_decision.cpp
   src/pass_receive.cpp
+  src/pass.cpp
   src/gotopose.cpp
   src/strategy/game_state_manager.cpp
   src/strategy/strategy_director.cpp
