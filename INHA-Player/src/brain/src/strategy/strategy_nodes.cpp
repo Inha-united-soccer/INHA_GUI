@@ -2,7 +2,12 @@
 #include "strategy/strategy_nodes.h"
 #include "strategy/game_state_manager.h"
 #include "strategy/strategy_director.h"
-
+#include "strategy/strategy_nodes.h"
+#include "strategy/game_state_manager.h"
+#include "strategy/strategy_director.h"
+#include "../condition/check_ball_dist.h"
+#include "../condition/is_lead.h"
+#include "../action/action_wait.h"
 using namespace std;
 using namespace BT;
 
@@ -13,5 +18,12 @@ using namespace BT;
 
 void RegisterStrategyNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
     REGISTER_STRATEGY_BUILDER(GameStateManager);
+    REGISTER_STRATEGY_BUILDER(GameStateManager);
     REGISTER_STRATEGY_BUILDER(StrategyDirector);
+    REGISTER_STRATEGY_BUILDER(CheckBallDist);
+    REGISTER_STRATEGY_BUILDER(IsLead);
+    factory.registerBuilder<ActionWait>("Wait", 
+        [brain](const std::string& name, const BT::NodeConfiguration& config) {
+            return std::make_unique<ActionWait>(name, config, brain);
+        });
 }

@@ -4,8 +4,6 @@
 #include "behaviortree_cpp/bt_factory.h"
 #include "brain.h"
 
-inline void RegisterTacticsNodes(BT::BehaviorTreeFactory& factory, Brain* brain) {
-    // No tactics nodes yet
-}
+void RegisterTacticsNodes(BT::BehaviorTreeFactory& factory, Brain* brain);
 
 #endif
