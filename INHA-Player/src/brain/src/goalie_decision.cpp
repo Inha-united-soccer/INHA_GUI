@@ -171,8 +171,8 @@ NodeStatus CalcClearingDir::tick()
     brain->log->setTimeNow();
     brain->log->log(
         "field/clearing_dir",
-        rerun::Arrows2D::from_vectors({{10 * cos(brain->data->clearingDir), -10 * sin(brain->data->clearingDir)}})
-            .with_origins({{bPos.x, -bPos.y}})
+        rerun::Arrows2D::from_vectors({{10.0f * (float)cos(brain->data->clearingDir), -10.0f * (float)sin(brain->data->clearingDir)}})
+            .with_origins({{(float)bPos.x, (float)-bPos.y}})
             .with_colors(0xFFFFFFFF)
             .with_radii(0.01)
             .with_draw_order(31)
@@ -609,10 +609,10 @@ NodeStatus CalcGoliePos::tick(){
     brain->log->setTimeNow();
     brain->log->log(
         "field/block_dir",
-        rerun::Arrows2D::from_vectors({{tx-cx, -(ty-cy)}})
-            .with_origins({{cx, cy}})
+        rerun::Arrows2D::from_vectors({{(float)(tx-cx), (float)-(ty-cy)}})
+            .with_origins({{(float)cx, (float)cy}})
             .with_colors({0x00FFFFFF}) 
-            .with_radii(0.015) 
+            .with_radii(0.015f) 
             .with_draw_order(32)
     );
 		

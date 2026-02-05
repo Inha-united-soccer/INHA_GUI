@@ -61,6 +61,11 @@ struct BrainData {
     Pose2D odomToField;      
     Pose2D robotPoseToOdom;  
 
+    // Goalie/Defender specific data
+    Pose2D Pred_ball;
+    Pose2D GoliePos;
+    double clearingDir = 0.0;
+
     inline vector<GameObject> getRobots() const {
         std::lock_guard<std::mutex> lock(_robotsMutex);
         return _robots;
