@@ -428,6 +428,7 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
     // 점수 기록
     data->score = static_cast<int>(myTeamInfo.score);
     data->oppoScore = static_cast<int>(oppoTeamInfo.score);
+    data->secsRemaining = static_cast<int>(msg.secs_remaining);
 }
 
 void Brain::strategyCallback(const std_msgs::msg::String::SharedPtr msg) {

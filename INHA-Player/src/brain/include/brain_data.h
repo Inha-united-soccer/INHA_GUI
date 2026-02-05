@@ -20,6 +20,7 @@ struct BrainData {
     /* ----------------------------------------------------------------------------- 게임 컨트롤러 관련 파라미터 -------------------------------------------------------------------- */ 
     int score = 0;
     int oppoScore = 0;
+    int secsRemaining = 0;
 
     int penalty[HL_MAX_NUM_PLAYERS]; // 우리 팀 선수의 페널티 상태
     int oppoPenalty[HL_MAX_NUM_PLAYERS]; // 상대 팀 선수의 페널티 상태
