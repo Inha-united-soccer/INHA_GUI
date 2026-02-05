@@ -186,10 +186,23 @@ NodeStatus OfftheballPosition::tick(){
     double vX_field = errX * 1.0;
     double vY_field = errY * 1.0;
 
+    double v_limit = 1.0;
+    getInput("v_limit", v_limit);
+
+    double stop_threshold = 0.1;
+    getInput("stop_threshold", stop_threshold);
+
     // 로봇 좌표계로 변환
     double vx_robot = cos(robotTheta) * vX_field + sin(robotTheta) * vY_field;
     double vy_robot = -sin(robotTheta) * vX_field + cos(robotTheta) * vY_field;
-    vx_robot = cap(vx_robot, 1.0, -0.3); // 최대 1m/s, 최소 0.5m/s
+    
+    // 정지 조건 체크
+    if (sqrt(errX*errX + errY*errY) < stop_threshold) {
+        vx_robot = 0.0;
+        vy_robot = 0.0;
+    }
+
+    vx_robot = cap(vx_robot, v_limit, -0.3); // 최대 v_limit, 최소 0.3
     vy_robot = cap(vy_robot, 0.3, -0.3); // 최대 0.5m/s, 최소 0.5m/s
 
     // 회전 제어

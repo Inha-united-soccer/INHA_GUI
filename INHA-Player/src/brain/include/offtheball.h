@@ -21,6 +21,8 @@ public:
     {
         return {
             InputPort<double>("dist_from_goal", 2.0, "goal 앞에서 대기할 거리"),
+            InputPort<double>("stop_threshold", 0.1, "목표 위치 도달 판단 거리"),
+            InputPort<double>("v_limit", 1.0, "최대 속도 제한"),
         };
     }
 
