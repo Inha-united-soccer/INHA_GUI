@@ -99,9 +99,9 @@ class SSHManager:
             if persistence_target:
                 print(f"[Deploy] Persistence target detected: {persistence_target}")
                 # 소스 코드 경로 (재빌드 시 사용)
-                src_path = f"/home/booster/Workspace/GUI/src/brain/behavior_trees/subtrees/{persistence_target}.xml"
+                src_path = f"/home/booster/Workspace/GUI/INHA-Player/src/brain/behavior_trees/subtrees/{persistence_target}.xml"
                 # 설치된 경로 (현재 실행 중인 노드가 참조)
-                install_path = f"/home/booster/Workspace/GUI/install/brain/share/brain/behavior_trees/subtrees/{persistence_target}.xml"
+                install_path = f"/home/booster/Workspace/GUI/INHA-Player/install/brain/share/brain/behavior_trees/subtrees/{persistence_target}.xml"
                 
                 # 덮어쓰기 명령 (sudo가 필요할 수도 있으나, 보통 user 권한으로 가능)
                 # 만약 권한 문제가 생기면 echo ... | sudo tee ... 로 변경 필요
@@ -110,8 +110,8 @@ class SSHManager:
                 print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
 
             # 2. ROS 2 환경 설정 명령어
-            # Workspace 경로 GUI로 수정
-            setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/configs/fastdds.xml"
+            # Workspace 경로 GUI/INHA-Player로 수정
+            setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
             
             # 3. Python 스크립트 작성 (Base64 인코딩)
             # 토픽으로도 쏴줘서 즉시 반영되게 함 (재시작 없이)

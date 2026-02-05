@@ -2,7 +2,7 @@
 #define GOALIE_DECISION_H
 
 #include "brain_tree.h"
-#include "behaviortree_cpp_v3/behavior_tree.h"
+#include "behaviortree_cpp/behavior_tree.h"
 
 using namespace BT;
 
