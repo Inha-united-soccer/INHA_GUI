@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <ctime>
 
-// #define REGISTER_STRIKERDECISION_BUILDER(Name)     \
-//     factory.registerBuilder<Name>( \
-//         #Name,                     \
-//         [brain](const string &name, const NodeConfig &config) { return make_unique<Name>(name, config, brain); });
+#define REGISTER_STRIKERDECISION_BUILDER(Name)     \
+    factory.registerBuilder<Name>( \
+        #Name,                     \
+        [brain](const string &name, const NodeConfiguration &config) { return make_unique<Name>(name, config, brain); });
 
 
 void RegisterStrikerDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brain){
