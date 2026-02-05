@@ -24,14 +24,11 @@ void RegisterDefenderDecisionNodes(BT::BehaviorTreeFactory &factory, Brain* brai
 // DefenderDecision (from DefenderDecide in decision_role.cpp)
 // ==========================================
 NodeStatus DefenderDecision::tick() {
-    double paramChaseSpeed = 0.8;
-    double paramDefenseLineX = -10.0; // 기본값: 제한 없음
-    double paramKickThreshold = 0.3;  
-    
     // Default 값
-    if (auto val = brain->tree->getEntry<double>("Strategy.param_chase_speed_limit")) paramChaseSpeed = val;
-    if (auto val = brain->tree->getEntry<double>("Strategy.param_defense_line_x")) paramDefenseLineX = val;
-    if (auto val = brain->tree->getEntry<double>("Strategy.param_kick_threshold")) paramKickThreshold = val;
+    // Note: paramChaseSpeed, paramDefenseLineX, paramKickThreshold removed as they were unused in this function
+    // if (auto val = brain->tree->getEntry<double>("Strategy.param_chase_speed_limit")) paramChaseSpeed = val;
+    // if (auto val = brain->tree->getEntry<double>("Strategy.param_defense_line_x")) paramDefenseLineX = val;
+    // if (auto val = brain->tree->getEntry<double>("Strategy.param_kick_threshold")) paramKickThreshold = val;
     
     double chaseRangeThreshold;
     getInput("chase_threshold", chaseRangeThreshold);
