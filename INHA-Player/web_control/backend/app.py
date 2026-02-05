@@ -82,8 +82,8 @@ def send_command(command: Command):
     
     # [Log Modification] User requested brain.log at root
     if "brain_nohup.log" in command.cmd:
-        command.cmd = command.cmd.replace("brain_nohup.log", "brain.log")
-        print("[API] Redirected output to brain.log")
+        command.cmd = command.cmd.replace("brain_nohup.log", "/home/booster/Workspace/GUI/INHA-Player/brain.log")
+        print("[API] Redirected output to INHA-Player/brain.log")
     stdout, stderr = ssh_manager.execute_command(command.robot_id, command.cmd)
     if stdout is None:
         raise HTTPException(status_code=500, detail=stderr)
