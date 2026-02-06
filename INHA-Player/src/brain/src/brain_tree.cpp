@@ -26,6 +26,8 @@
         #Name,                     \
         [this](const string &name, const NodeConfig &config) { return make_unique<Name>(name, config, brain); });
 
+#include <mutex>
+
 void BrainTree::init(){
     BehaviorTreeFactory factory;
 
@@ -117,7 +119,10 @@ void BrainTree::initEntry(){
     setEntry<bool>("odom_calibrated", false);
 }
 
-void BrainTree::tick(){ tree.tickOnce(); }
+void BrainTree::tick(){ 
+    std::lock_guard<std::mutex> lock(treeMutex);
+    tree.tickOnce(); 
+}
 
 void BrainTree::reloadTree(std::string path) {
     std::cout << "[BrainTree] Reloading Tree from: " << path << std::endl;
@@ -176,7 +181,15 @@ void BrainTree::reloadTree(std::string path) {
         }
 
         std::cout << "[BrainTree] Creating tree with ID: " << target_tree_id << std::endl;
-        tree = factory.createTree(target_tree_id);
+        
+        // CRITICAL: Protect tree swap with Mutex
+        {
+            std::lock_guard<std::mutex> lock(treeMutex);
+            tree = factory.createTree(target_tree_id);
+            // Re-initialize blackboard entries for the new tree
+            initEntry(); 
+        }
+        
         std::cout << "[BrainTree] Successfully reloaded tree!" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "[BrainTree] Failed to reload tree: " << e.what() << std::endl;

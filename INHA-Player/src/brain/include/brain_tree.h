@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tuple>
+#include <mutex>
 #include <behaviortree_cpp/behavior_tree.h>
 #include <behaviortree_cpp/bt_factory.h>
 #include <algorithm>
@@ -51,4 +52,6 @@ private:
     Brain *brain;
 
     void initEntry(); // 블랙보드 초기화는 여기서 진행
+    
+    std::mutex treeMutex; // Thread protection for strategy reloading
 };
