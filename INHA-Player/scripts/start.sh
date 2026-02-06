@@ -9,6 +9,12 @@ echo "[STOP EXISTING NODES (IF ANY), TO AVOID CONFILICT]"
 source ./install/setup.bash
 export FASTRTPS_DEFAULT_PROFILES_FILE=./configs/fastdds.xml
 
+echo "[DEBUG] AMENT_PREFIX_PATH: $AMENT_PREFIX_PATH"
+echo "[DEBUG] Checking brain package visibility:"
+ros2 pkg list | grep brain || echo "brain package NOT found in list"
+ros2 pkg prefix brain || echo "brain package prefix NOT found"
+
+
 echo "[START ROBOCUP NODES]"
 echo "[START VISION]"
 # 如果是用的zed相机，https://booster.feishu.cn/wiki/XodtwX56AiCtZtkewo3cPgbrn8d#share-MDrvdyWa2o87qixU3TccE72NnNc 文档中下载安装包，可以自启动zed
