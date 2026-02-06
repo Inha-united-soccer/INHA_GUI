@@ -42,10 +42,10 @@
                   
                   <ReactiveSequence>
                      
-                     <ReactiveSequence>
+                     <!-- <ReactiveSequence> -->
                         <!-- Strategy & Tactics Layer (Parameter Injection + Decision) -->
                         <!-- <SubTree ID="StrategyTree" _autoremap="true" /> -->
-                     </ReactiveSequence>
+                     <!-- </ReactiveSequence> -->
                      
                      <!-- 행동 실행 -->
                      <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
