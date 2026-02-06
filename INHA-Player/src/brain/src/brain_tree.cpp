@@ -1,5 +1,7 @@
 #include <cmath>
 #include <cstdlib>
+#include <vector>
+#include <string>
 
 #include "brain_tree.h"
 #include "locator.h"
