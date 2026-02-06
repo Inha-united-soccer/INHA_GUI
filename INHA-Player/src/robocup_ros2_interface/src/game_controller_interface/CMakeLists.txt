@@ -12,9 +12,9 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/GameControlData.msg"
   "msg/RobotInfo.msg"
   "msg/TeamInfo.msg"
+  "msg/GameControlData.msg"
 )
 
 if(BUILD_TESTING)
