@@ -36,6 +36,7 @@ public:
     // 블랙보드 변수 접근 함수
     template <typename T>
     inline T getEntry(const string &key){
+        std::lock_guard<std::recursive_mutex> lock(treeMutex);
         T value;
         [[maybe_unused]] auto res = tree.rootBlackboard()->get<T>(key, value);
         return value;
@@ -44,6 +45,7 @@ public:
     // 블랙보드 변수 셋팅 함수
     template <typename T>
     inline void setEntry(const string &key, const T &value){
+        std::lock_guard<std::recursive_mutex> lock(treeMutex);
         tree.rootBlackboard()->set<T>(key, value);
     }
 
@@ -53,5 +55,5 @@ private:
 
     void initEntry(); // 블랙보드 초기화는 여기서 진행
     
-    std::mutex treeMutex; // Thread protection for strategy reloading
+    std::recursive_mutex treeMutex; // Use recursive mutex to allow internal calls from tick()
 };

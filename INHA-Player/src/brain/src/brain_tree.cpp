@@ -120,7 +120,7 @@ void BrainTree::initEntry(){
 }
 
 void BrainTree::tick(){ 
-    std::lock_guard<std::mutex> lock(treeMutex);
+    std::lock_guard<std::recursive_mutex> lock(treeMutex);
     tree.tickOnce(); 
 }
 
@@ -184,7 +184,7 @@ void BrainTree::reloadTree(std::string path) {
         
         // CRITICAL: Protect tree swap with Mutex
         {
-            std::lock_guard<std::mutex> lock(treeMutex);
+            std::lock_guard<std::recursive_mutex> lock(treeMutex);
             tree = factory.createTree(target_tree_id);
             // Re-initialize blackboard entries for the new tree
             initEntry(); 
