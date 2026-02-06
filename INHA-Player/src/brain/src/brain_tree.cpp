@@ -126,7 +126,7 @@ void BrainTree::tick(){
 
 void BrainTree::reloadTree(std::string path) {
     std::cout << "[BrainTree] Reloading Tree from: " << path << std::endl;
-    tree.haltTree();
+    // tree.haltTree(); // Moved inside mutex lock below
     
     BehaviorTreeFactory factory;
 
@@ -185,6 +185,7 @@ void BrainTree::reloadTree(std::string path) {
         // CRITICAL: Protect tree swap with Mutex
         {
             std::lock_guard<std::recursive_mutex> lock(treeMutex);
+            tree.haltTree(); // Halt old tree safely
             tree = factory.createTree(target_tree_id);
             // Re-initialize blackboard entries for the new tree
             initEntry(); 
