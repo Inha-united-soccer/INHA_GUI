@@ -90,3 +90,4 @@ brain_node:
       img_interval: 1 # 리런 로그 파일 이미지 저장 간격
       
     game_control_ip: "192.168.0.73" # 게임 컨트롤러 IP 주소 -> gamecontroller launch 파일도 수정 필요
+    tree_file_path: "/home/booster/Workspace/GUI/INHA-Player/src/brain/behavior_trees/game.xml"
