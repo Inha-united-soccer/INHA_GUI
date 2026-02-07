@@ -5,9 +5,7 @@
     <include path="./subtrees/cam_find_and_track_ball.xml" />
     <include path="./subtrees/striker.xml" />
     <include path="./subtrees/defender.xml" />
-    <include path="./subtrees/goalkeeper.xml" />
     <include path="./subtrees/find_ball.xml" />
-    <include path="./strategy_layer.xml" />
 
 
     <!-- 시작 -->
@@ -31,18 +29,18 @@
 
                     <ReactiveSequence _while="gc_game_sub_state_type=='NONE'" name="Normal_Game">
                         
-                        <Sequence _while="gc_game_state=='INITIAL'" name="Initial">
-                            <AlwaysSuccess/>
-                        </Sequence>
+                        <ReactiveSequence _while="gc_game_state=='INITIAL'" name="Initial">
+                            <!-- <SetVelocity x="0.0" y="0.0" theta="0.0" /> -->
+                            <CamScanField _while="!odom_calibrated"/>
+                            <SubTree ID="CamFindAndTrackBall" _while="odom_calibrated" _autoremap="true" />
+                            <SelfLocateEnterField />
+                        </ReactiveSequence>
 
                         <ReactiveSequence _while="gc_game_state=='READY'" name="Ready">
                             <SubTree ID="CamFindAndTrackBall" _autoremap="true" />
 
-                            <GoToPose _while="player_role == 'striker'" target_pos_x="-0.5" target_pos_y="0.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
-                            <GoToPose _while="player_role == 'defender'" target_pos_x="-2.5" target_pos_y="0.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
-                            <GoToPose _while="player_role == 'goal_keeper'" target_pos_x="-4.5" target_pos_y="0.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
-                            
-                            <!-- <CalcKickDir /> -->
+                            <GoToPose _while="player_role == 'striker'" target_pos_x="2.0" target_pos_y="1.5" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.1" v_limit="0.6" />
+                            <CalcKickDir />
                             <SubTree ID="Locate" _autoremap="true" />
                         </ReactiveSequence>
 
@@ -54,12 +52,6 @@
 
                         <ReactiveSequence _while="gc_game_state=='PLAY'" name="Play">
                             
-                            <!-- 역할 전환 로직 -->
-                            <RoleManager current_role="{player_role}" new_role="{player_role}" />
-                            
-                            <!-- 전략/전술 레이어 (모든 역할 공통 적용) -->
-                            <SubTree ID="StrategyTree" _autoremap="true" />
-
                             <SubTree
                                 ID="CamFindAndTrackBall"
                                 _autoremap="true"
@@ -67,8 +59,6 @@
 
                             <ReactiveSequence>
                                 <SubTree ID="Striker" _autoremap="true" _while="player_role == 'striker'" />
-                                <SubTree ID="Defender" _autoremap="true" _while="player_role == 'defender'" />
-                                <SubTree ID="Goalkeeper" _autoremap="true" _while="player_role == 'goal_keeper'" />
                             </ReactiveSequence>
                             <SubTree ID="Locate" _autoremap="true" />
                             
