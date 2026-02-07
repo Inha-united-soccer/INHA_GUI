@@ -30,7 +30,7 @@
               
               <!-- A. 행동 결정 (Hold vs Clear vs Find) -->
               <ReactiveSequence>
-                <GoalieDecide decision_out="{decision}" decision_in="{decision}" />
+                <GoalieDecide decision_out="{decision}" decision_in="{decision}" ctPosx="-4.5" ctPosy="0.0" closer_margin="0.5" clearing_max="3.0"/>
                 <!-- 공을 놓쳤을 때: 찾기 모드 -->
                 <Sequence _while="decision=='find'">
                     <CamFindBall />
@@ -41,7 +41,7 @@
               <ReactiveSequence _while="decision == 'normal_clearing'">
                   <ReactiveSequence>
                     <PredictBallTraj R_meas="0.02" sigma_a="2.0" horizon="0.8" vel_decay="0.3"/>
-                    <GoalieClearingDecide decision_out="{clearing_decision}" decision_in="{clearing_decision}" />
+                    <GoalieClearingDecide decision_out="{clearing_decision}" clearing_decision_in="{clearing_decision}" chase_threshold="0.5" ctPosx="-4.5" ctPosy="0.0" decision_in="{decision}"/>
                   </ReactiveSequence>
                   <!-- 걷어내기 위해 접근 -->
                   <Chase _while="clearing_decision == 'clearing_chase'" vx_limit="1.0" vy_limit="0.5" vtheta_limit="1.0" dist="0.15" safe_dist="0.35" />
@@ -52,7 +52,7 @@
               <!-- C. 위급 걷어내기 (Critical Clearing) -->
               <ReactiveSequence _while="decision == 'critical_clearing'">
                   <ReactiveSequence>
-                    <GoalieClearingDecide decision_out="{clearing_decision}" decision_in="{clearing_decision}" />
+                    <GoalieClearingDecide decision_out="{clearing_decision}" clearing_decision_in="{clearing_decision}" chase_threshold="0.5" ctPosx="-4.5" ctPosy="0.0" decision_in="{decision}"/>
                   </ReactiveSequence>
                   <ReactiveSequence _while="clearing_decision == 'clearing_chase'">
                     <CalcClearingDir/>
@@ -64,8 +64,8 @@
               <!-- D. 골대 방어 (Hold) -->
               <ReactiveSequence _while="decision == 'hold'">
                 <PredictBallTraj R_meas="0.02" sigma_a="2.0" horizon="0.8" drop_time="0.5" vel_decay="0.3"/>
-                <CalcGoliePos />
-                <GolieMove vx_high="1.0" vx_low="-0.4" vy_high="0.8" vy_low="-0.8" Kp="2.0" Kp_theta="4.0"/>
+                <CalcGoliePos ctPosx="-4.5" ctPosy="0.0" golie_radius="0.5"/>
+                <GolieMove vx_high="1.0" vx_low="-0.4" vy_high="0.8" vy_low="-0.8" Kp="2.0" Kp_theta="4.0" stop_threshold="0.05" ctPosx="-4.5" ctPosy="0.0"/>
               </ReactiveSequence>
             </Sequence>
         </ReactiveSequence>
