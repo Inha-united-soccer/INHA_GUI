@@ -33,7 +33,10 @@
                <ReactiveSequence>
                   <!-- 공 추적 -->
                   <!-- <SubTree ID="CamFindAndTrackBall" _autoremap="true" /> -->
-                  <SubTree ID="CamFindAndTrackBall" _while="decision != 'offtheball'" _autoremap="true" />
+                  <SubTree
+                                ID="CamFindAndTrackBall"
+                                _autoremap="true"
+                                _while="decision != 'offtheball'" />
                   
                   <CalcKickDir />
 
@@ -42,10 +45,10 @@
                   
                   <ReactiveSequence>
                      
-                     <!-- <ReactiveSequence> -->
+                     <ReactiveSequence>
                         <!-- Strategy & Tactics Layer (Parameter Injection + Decision) -->
-                        <!-- <SubTree ID="StrategyTree" _autoremap="true" /> -->
-                     <!-- </ReactiveSequence> -->
+                        <SubTree ID="StrategyTree" _autoremap="true" />
+                     </ReactiveSequence>
                      
                      <!-- 행동 실행 -->
                      <SubTree ID="FindBall" _while="decision=='find'" _autoremap="true" />
