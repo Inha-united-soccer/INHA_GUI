@@ -433,6 +433,14 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
 
 void Brain::strategyCallback(const std_msgs::msg::String::SharedPtr msg) {
     if (msg->data.empty()) return;
+
+    // Check if strategy content has changed
+    static std::string last_strategy_content = "";
+    if (msg->data == last_strategy_content) {
+        return; // Skip duplicate strategy
+    }
+
+    last_strategy_content = msg->data;
     string tempPath = "/tmp/robot_strategy_" + to_string(config->playerId) + ".xml";
     ofstream out(tempPath);
     out << msg->data;

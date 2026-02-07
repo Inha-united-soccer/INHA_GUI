@@ -8,16 +8,15 @@ import json
 import os
 from ssh_manager import ssh_manager
 from ros_bridge import init_ros, ros_bridge
+from glob import glob
 
 # FastAPI 앱 초기화
-# 이 파일(app.py)은 웹 관제 시스템의 백엔드 서버 메인 파일입니다.
-# 프론트엔드(React)와 로봇(ROS/SSH) 사이의 중계 역할을 담당합니다.
-# - REST API: 로봇 연결, 전략 배포, 파일 저장/로드
-# - WebSocket: 실시간 로봇 상태(위치, 배터리 등) 스트리밍
+# 이 파일(app.py)은 웹 관제 시스템의 백엔드 서버 메인 파일로 프론트엔드(React)와 로봇(ROS/SSH) 사이의 중계 역할을 담당한다
+# REST API: 로봇 연결, 전략 배포, 파일 저장/로드
+# WebSocket: 실시간 로봇 상태(위치, 배터리 등) 스트리밍
 app = FastAPI()
 
-# CORS 설정 (Cross-Origin Resource Sharing)
-# 보안 정책 상, 다른 포트(3000번 React)에서 이 서버(8000번)로 요청을 보낼 때 차단되지 않도록 허용합니다.
+# CORS 설정 (Cross-Origin Resource Sharing) 보안 정책 상, 다른 포트(3000번 React)에서 이 서버(8000번)로 요청을 보낼 때 차단되지 않도록 허용한다
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 모든 출처(Origin)에서의 접근을 허용 (개발 편의성)
@@ -27,16 +26,15 @@ app.add_middleware(
 )
 
 # 프론트엔드 빌드 결과물 경로 설정
-# React 프로젝트를 'npm run build'로 빌드하면 생성되는 'dist' 폴더를 연결합니다.
+# React 프로젝트를 'npm run build'로 빌드하면 생성되는 'dist' 폴더를 연결한다 - /frontend/dist
 FRONTEND_DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../frontend/dist")
 
-# 정적 파일 서빙 (CSS, JS, 이미지 등)
-# HTML이 아닌 부가 리소스들을 브라우저가 가져갈 수 있도록 경로를 마운트합니다.
+# 정적 파일 서빙 (CSS, JS, 이미지 등) HTML이 아닌 부가 리소스들을 브라우저가 가져갈 수 있도록 경로를 마운트한다
 if os.path.exists(FRONTEND_DIST_DIR):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST_DIR, "assets")), name="assets")
 
 # 메인 페이지 라우팅 ("/")
-# 브라우저로 접속했을 때 React 앱의 진입점(index.html)을 보여줍니다.
+# 브라우저로 접속했을 때 React 앱의 진입점(index.html)을 보여준다
 @app.get("/")
 async def serve_index():
     if os.path.exists(os.path.join(FRONTEND_DIST_DIR, "index.html")):
@@ -44,8 +42,8 @@ async def serve_index():
     return {"message": "Frontend build not found. Please run 'npm run build' in frontend directory."}
 
 # ROS 2 노드 초기화
-# 서버 시작 시 ROS 2 노드를 생성하여 토픽 통신을 준비합니다.
-# Mac 등 ROS가 없는 환경에서는 예외가 발생하며, 이 경우 자동으로 시뮬레이션 모드로 동작하거나 UDP 모니터를 사용합니다.
+# 서버 시작 시 ROS 2 노드를 생성하여 토픽 통신을 준비한다
+# Mac 등 ROS가 없는 환경에서는 예외가 발생하며, 이 경우 자동으로 시뮬레이션 모드로 동작하거나 UDP 모니터를 사용한다 // 삭제 예정
 try:
     ros_bridge_node = init_ros()
 except Exception as e:
@@ -65,7 +63,7 @@ class Command(BaseModel):
     cmd: str      # 실행할 리눅스 쉘 명령어 (예: sudo reboot)
 
 # [API] 로봇 SSH 연결
-# 사용자가 'Connect' 버튼을 눌렀을 때 호출됩니다.
+# 사용자가 'Connect' 버튼을 눌렀을 때 호출된다
 @app.post("/api/connect")
 def connect_robot(config: RobotConfig):
     print(f"[API] Connect request: {config.id}@{config.ip}")
@@ -75,12 +73,12 @@ def connect_robot(config: RobotConfig):
     return {"status": "connected", "id": config.id}
 
 # [API] 쉘 명령어 전송
-# 'Start Program', 'Reboot' 등의 버튼을 눌렀을 때 호출됩니다.
+# 'Start Program', 'Reboot' 등의 버튼을 눌렀을 때 호출된다
 @app.post("/api/command")
 def send_command(command: Command):
     print(f"[API] Command request: {command.cmd} -> {command.robot_id}")
     
-    # [Log Modification] User requested brain.log at root
+    # [Log Modification] User requested brain.log at root // 로그 출력 파일 생성
     if "brain_nohup.log" in command.cmd:
         command.cmd = command.cmd.replace("brain_nohup.log", "/home/booster/Workspace/GUI/INHA-Player/launcher.log")
         command.cmd = command.cmd.replace("Workspace/Soccer", "Workspace/GUI/INHA-Player")
@@ -101,8 +99,8 @@ class StrategyDeploy(BaseModel):
     strategy_xml: str     # 배포할 Behavior Tree XML 내용
 
 # [API] 전략 배포 (Hot-Swap)
-# 작성한 전략(XML)을 로봇에게 전송하여 즉시 적용시킵니다.
-# 로봇 내부에서 'ros2 topic pub' 명령을 실행하는 방식으로 동작합니다.
+# 작성한 전략(XML)을 로봇에게 전송하여 즉시 적용시킨다
+# 로봇 내부에서 'ros2 topic pub' 명령을 실행하는 방식으로 동작한다
 @app.post("/api/deploy_strategy")
 def deploy_strategy_endpoint(data: StrategyDeploy):
     # 1. 파일 내용(XML) 추출
@@ -139,14 +137,13 @@ def deploy_strategy_endpoint(data: StrategyDeploy):
     else:
         raise HTTPException(status_code=500, detail="Failed to deploy to any robot")
 
-import os
-from glob import glob
+
 
 # 전략 파일들이 저장될 디렉토리
 STRATEGY_DIR = "strategies"
 
 # [API] 저장된 전략 목록 조회
-# strategies 폴더 내의 모든 .xml 파일 이름을 반환합니다.
+# strategies 폴더 내의 모든 .xml 파일 이름을 반환한다
 @app.get("/api/strategies")
 async def list_strategies():
     files = glob(os.path.join(STRATEGY_DIR, "*.xml"))
@@ -158,7 +155,7 @@ class StrategySave(BaseModel):
     xml: str  # 파일 내용
 
 # [API] 전략 저장
-# Blockly로 작성한 전략을 서버에 파일로 저장합니다.
+# Blockly로 작성한 전략을 서버에 파일로 저장한다 // 삭제 예정
 @app.post("/api/strategies")
 async def save_strategy(data: StrategySave):
     filename = data.name if data.name.endswith(".xml") else f"{data.name}.xml"
@@ -168,7 +165,7 @@ async def save_strategy(data: StrategySave):
     return {"status": "saved", "name": filename}
 
 # [API] 특정 전략 불러오기
-# 저장된 XML 파일의 내용을 읽어서 반환합니다.
+# 저장된 XML 파일의 내용을 읽어서 반환한다
 @app.get("/api/strategies/{name}")
 async def load_strategy(name: str):
     path = os.path.join(STRATEGY_DIR, name)

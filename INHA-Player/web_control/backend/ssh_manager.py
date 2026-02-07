@@ -4,8 +4,8 @@ import logging
 import base64
 
 # [SSH 관리자 클래스]
-# 로봇들과의 SSH 연결 세션을 관리하고, 원격 명령을 실행하는 역할을 합니다.
-# 싱글톤 패턴처럼 하나의 인스턴스(ssh_manager)를 전역에서 공유하여 사용합니다.
+# 로봇들과의 SSH 연결 세션을 관리하고, 원격 명령을 실행하는 역할
+# 싱글톤 패턴처럼 하나의 인스턴스(ssh_manager)를 전역에서 공유하여 사용
 class SSHManager:
     def __init__(self):
         # 연결된 SSH 클라이언트 객체들을 저장하는 딕셔너리

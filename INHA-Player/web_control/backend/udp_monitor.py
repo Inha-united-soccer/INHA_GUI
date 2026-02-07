@@ -139,11 +139,35 @@ class UDPMonitor:
             # struct.unpack을 사용하여 바이너리 데이터 해독
             unpacked = struct.unpack(FMT, data)
 
+            # 데이터 추출
+            # <5i 4? 3d 3d 3d 2d 2i ? 7x 2d
+            # 0: validation, 1: commId, 2: teamId, 3: playerId, 4: role
+            team_id = unpacked[2]
+            player_id = unpacked[3]
+            role_int = unpacked[4]
+            
+            # 로봇 ID 생성 (예: robot_1)
+            robot_id = f"robot_{player_id}"
+            
+            # Role 매핑 (TeamCommunicationMsg 참고)
+            role_map = {0: "Unknown", 1: "Goalkeeper", 2: "Defender", 3: "Striker", 4: "Support", 5: "Joker"}
+            role_str = role_map.get(role_int, "Unknown")
+
+            # 위치 정보 (robotPoseToField: indices 15, 16, 17)
+            # unpacked 튜플 인덱스 계산 필요:
+            # 5i(0-4) + 4?(5-8) + 3d(9-11:ballConf,Range,Cost) + 3d(12-14:ballPos) + 3d(15-17:robotPos)
+            rx = unpacked[15]
+            ry = unpacked[16]
+            rtheta = unpacked[17]
+            
+            # 공 정보
+            bx = unpacked[12]
+            by = unpacked[13]
+
             # Update Status
             self.robots[robot_id] = {
                 "id": robot_id,
                 "role": role_str,
-                "battery": 12.5, # UDP does not have battery info, dummy value
                 "x": rx,
                 "y": ry,
                 "theta": rtheta,
