@@ -28,6 +28,9 @@
         <ReactiveSequence _while="!ball_out">
             <Sequence>
               
+              <!-- 0. 골대 복귀 우선 순위 (Return to Goal First) -->
+              <GoToPose target_pos_x="4.0" target_pos_y="0.0" target_pos_theta="0.0" turn_threshold="0.5" stop_threshold="0.3" v_limit="0.8" />
+
               <!-- A. 행동 결정 (Hold vs Clear vs Find) -->
               <ReactiveSequence>
                 <GoalieDecide decision_out="{decision}" decision_in="{decision}" ctPosx="-4.5" ctPosy="0.0" closer_margin="0.5" clearing_max="3.0"/>
