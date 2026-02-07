@@ -2,7 +2,7 @@
    <include path="./cam_find_and_track_ball.xml" />
    <include path="./locate.xml" />
    <include path="./find_ball.xml" />
-   <!-- <include path="../strategy_layer.xml" /> -->
+   <include path="../strategy_layer.xml" />
 
    <BehaviorTree ID="Striker">
       <ReactiveSequence>
