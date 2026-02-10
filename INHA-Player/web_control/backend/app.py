@@ -25,6 +25,15 @@ app.add_middleware(
     allow_headers=["*"],  # 모든 HTTP 헤더 허용
 )
 
+# [Cache Control] Disable caching for all responses to ensure freshness
+@app.middleware("http")
+async def add_no_cache_header(request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 # 프론트엔드 빌드 결과물 경로 설정
 # React 프로젝트를 'npm run build'로 빌드하면 생성되는 'dist' 폴더를 연결한다 - /frontend/dist
 FRONTEND_DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../frontend/dist")
@@ -176,8 +185,41 @@ async def load_strategy(name: str):
 
 from udp_monitor import udp_monitor
 
+from gc_monitor import gc_monitor
+
+# [API] 비상 정지 (Emergency Stop)
+# 모든 연결된 로봇에게 SetVelocity<0,0,0> 전략을 배포하여 즉시 정지시킨다
+@app.post("/api/emergency_stop")
+def emergency_stop():
+    print("[API] Emergency Stop Requested!")
+    
+    # 정지용 전략 XML
+    stop_xml = """
+<root main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <SetVelocity vx="0.0" vy="0.0" w="0.0"/>
+    </BehaviorTree>
+</root>
+"""
+    connected_robots = list(ssh_manager.clients.keys())
+    if not connected_robots:
+        raise HTTPException(status_code=400, detail="No robots connected")
+        
+    results = {}
+    for robot_id in connected_robots:
+        success, msg = ssh_manager.deploy_strategy(robot_id, stop_xml)
+        results[robot_id] = "Stopped" if success else f"Failed: {msg}"
+        
+    return {"status": "executed", "results": results}
+
+# [API] 로그 조회
+@app.get("/api/logs/{robot_id}")
+def get_logs(robot_id: str):
+    log_content = ssh_manager.fetch_log(robot_id, lines=100)
+    return {"id": robot_id, "log": log_content}
+
 # [WebSocket] 실시간 상태 스트리밍 엔드포인트
-# 프론트엔드가 이 주소로 웹소켓을 연결하면, 0.5초마다 로봇들의 최신 상태를 JSON으로 전송해줍니다.
+# 프론트엔드가 이 주소로 웹소켓을 연결하면, 0.5초마다 로봇들의 최신 상태를 JSON으로 전송한다
 @app.websocket("/ws/status")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept() # 연결 수락
@@ -186,14 +228,16 @@ async def websocket_endpoint(websocket: WebSocket):
             status = {}
             
             # 1. UDP Monitor 데이터 우선 사용 (실제 로봇 데이터)
-            # udp_monitor가 백그라운드에서 수신한 최신 패킷 정보를 가져옵니다.
             udp_data = udp_monitor.get_status()
             if udp_data:
-                status = udp_data
-            
-            # 2. UDP 데이터가 없으면 ROS Bridge 데이터 사용 (시뮬레이션 또는 로컬 ROS)
+                status["robots"] = udp_data
             elif ros_bridge_node:
-                status = ros_bridge_node.get_status()
+                status["robots"] = ros_bridge_node.get_status()
+            else:
+                status["robots"] = {}
+
+            # 2. GameController 데이터 추가
+            status["game_info"] = gc_monitor.get_status()
             
             # 클라이언트에게 JSON 전송
             await websocket.send_json(status)

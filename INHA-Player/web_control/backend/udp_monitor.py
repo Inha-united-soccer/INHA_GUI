@@ -49,12 +49,11 @@ EXPECTED_SIZE = struct.calcsize(FMT) # Should be 144
 class UDPMonitor:
     def __init__(self, team_id=1):
         self.team_id = team_id
-        # Communication Broadcast Port: 20000 + team_id (Discovery) or 30000 + team_id (Unicast/Comm)?
-        # team_communication_msg.h defines VALIDATION_COMMUNICATION = 31202
-        # BrainCommunication.cpp uses _unicast_udp_port = 30000 + teamId for "Unicast"? 
-        # Actually usually robots broadcast status to 30000+TeamID or 20000+TeamID.
-        # Let's try to listen on the broadcast port. 
-        # Based on BrainCommunication.cpp: _unicast_udp_port = 30000 + teamId.
+        # Communication Broadcast Port: 10000 + TEAM_ID (RoboCup SPL Standard) or determined by config
+        # Based on BrainCommunication.cpp: initCommunicationReceiver binds to _unicast_udp_port (30000 + teamId)
+        # Note: The robots broadcast to port 30000 + teamId (Unicast usually implies specific IP, but here used for TeamComm?)
+        # Let's assume we listen on 30000 + team_id as per previous context
+        self.port = 30000 + self.team_id
         
         # UDP 소켓 생성 및 바인딩
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -141,33 +140,59 @@ class UDPMonitor:
 
             # 데이터 추출
             # <5i 4? 3d 3d 3d 2d 2i ? 7x 2d
-            # 0: validation, 1: commId, 2: teamId, 3: playerId, 4: role
+            # 0-4: int (val, commId, teamId, playerId, role)
+            # 5-8: bool (isAlive, isLead, ballDetected, ballLocKnown)
+            # 9-11: double (ballConf, ballRange, cost)
+            # 12-14: double (ballPos.x, .y, .z)
+            # 15-17: double (robotPos.x, .y, .theta)
+            # 20-21: int (cmdId, cmd)
+
             team_id = unpacked[2]
             player_id = unpacked[3]
             role_int = unpacked[4]
             
+            is_alive = unpacked[5]
+            is_lead = unpacked[6]
+            ball_detected = unpacked[7]
+            ball_range = unpacked[10]
+            
+            cmd = unpacked[21]
+
             # 로봇 ID 생성 (예: robot_1)
             robot_id = f"robot_{player_id}"
             
             # Role 매핑 (TeamCommunicationMsg 참고)
-            role_map = {0: "Unknown", 1: "Goalkeeper", 2: "Defender", 3: "Striker", 4: "Support", 5: "Joker"}
-            role_str = role_map.get(role_int, "Unknown")
+            # 1: striker, 2: defender, 3: goal_keeper (BrainCommunication.cpp line 373 logic uses 1=striker, 2=defender??)
+            # BrainCommunication.cpp sends: role == "striker" ? 1 : 2. (GK is not handled explicitly there?)
+            # Let's trust the map we had or update it.
+            role_map = {0: "Unknown", 1: "Striker", 2: "Defender", 3: "Goalkeeper", 4: "Support"}
+            role_str = role_map.get(role_int, f"Role {role_int}")
 
-            # 위치 정보 (robotPoseToField: indices 15, 16, 17)
-            # unpacked 튜플 인덱스 계산 필요:
-            # 5i(0-4) + 4?(5-8) + 3d(9-11:ballConf,Range,Cost) + 3d(12-14:ballPos) + 3d(15-17:robotPos)
+            # 위치 정보
             rx = unpacked[15]
             ry = unpacked[16]
             rtheta = unpacked[17]
             
             # 공 정보
             bx = unpacked[12]
-            by = unpacked[13]
+            by = unpacked[13] # Ball Z is unpacked[14]
+
+            # 상세 상태 문자열 생성
+            if not is_alive:
+                state_desc = "Fallen"
+            elif ball_detected:
+                state_desc = f"Ball Found ({ball_range:.2f}m)"
+            else:
+                state_desc = "Searching"
 
             # Update Status
             self.robots[robot_id] = {
                 "id": robot_id,
                 "role": role_str,
+                "state": state_desc, # Frontend displays this
+                "is_alive": is_alive,
+                "ball_detected": ball_detected,
+                "cmd": cmd,
                 "x": rx,
                 "y": ry,
                 "theta": rtheta,

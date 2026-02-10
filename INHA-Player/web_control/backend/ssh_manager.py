@@ -181,5 +181,25 @@ except Exception as e:
             self.logger.error(f"Deploy exception: {e}")
             return False, f"Deploy exception: {e}"
 
+# [로그 가져오기]
+    # tail 명령어를 사용하여 최신 로그를 가져온다
+    def fetch_log(self, robot_id, lines=50):
+        if robot_id not in self.clients:
+            return "Not connected"
+            
+        try:
+            client = self.clients[robot_id]
+            # launcher.log 파일의 끝부분 읽기
+            cmd = f"tail -n {lines} /home/booster/Workspace/GUI/INHA-Player/launcher.log"
+            stdin, stdout, stderr = client.exec_command(cmd)
+            
+            log_content = stdout.read().decode()
+            if not log_content:
+                err = stderr.read().decode()
+                return f"[Log Error] {err}" if err else "[Log] Empty"
+            return log_content
+        except Exception as e:
+            return f"[SSH Error] {e}"
+
 # 전역 인스턴스 생성
 ssh_manager = SSHManager()
