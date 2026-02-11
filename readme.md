@@ -18,13 +18,13 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 | **Dashboard View** |
 | :---: |
-| <img src="https://github.com/user-attachments/assets/13146327-1a4f-477f-87f8-834c51ba048d" width="100%"> <br> *Main Dashboard & Robot Status Cards* |
+| <img src="https://github.com/user-attachments/assets/13146327-1a4f-477f-87f8-834c51ba048d" width="100%"> <br> **Main Dashboard & Robot Status Cards** |
 
 <br>
 
 | Connect to Robot | Strategy Deployment | Control Panel |
 | :---: | :---: | :---: |
-| <img width="100%" alt="connect" src="https://github.com/user-attachments/assets/2e863aa6-46da-4f7d-ab80-e69b93be912f" /> <br> *Connection & Logs* | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="90%"> <br> *Strategy Interface* | <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="80%"> <br> *Detailed Control* |
+| <img width="100%" alt="connect" src="https://github.com/user-attachments/assets/2e863aa6-46da-4f7d-ab80-e69b93be912f" /> <br> **Connection & Logs** | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="90%"> <br> **Strategy Interface** | <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="80%"> <br> **Detailed Control** |
 
 ---
 
