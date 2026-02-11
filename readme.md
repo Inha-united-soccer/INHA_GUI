@@ -10,7 +10,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 ---
 
-## 📸 Screenshots
+## 📸 Interface Preview
 
 | **Dashboard View** |
 | :---: |
