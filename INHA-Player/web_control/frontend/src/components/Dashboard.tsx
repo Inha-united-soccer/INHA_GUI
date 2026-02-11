@@ -26,8 +26,8 @@ const DashboardComp = () => {
         state: "WAITING",
         secsRemaining: 0,
         teams: [
-            { teamNumber: 0, color: 0, score: 0, penaltyCount: 0 },
-            { teamNumber: 0, color: 1, score: 0, penaltyCount: 0 }
+            { teamNumber: 0, color: 0, score: 0, penaltyCount: 0, messageBudget: 12000 },
+            { teamNumber: 0, color: 1, score: 0, penaltyCount: 0, messageBudget: 12000 }
         ],
         secondaryState: "NONE",
         secondaryTime: 0

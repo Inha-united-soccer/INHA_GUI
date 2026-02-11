@@ -5,6 +5,7 @@ interface TeamInfo {
     color: number; // 0: Blue, 1: Red (usually)
     score: number;
     penaltyCount: number;
+    messageBudget?: number; // Optional as it might be missing in older versions or initial state
 }
 
 export interface GameInfo {
@@ -64,10 +65,13 @@ const GameInfoBoard = ({ info }: Props) => {
                             {team.score}
                         </Typography>
                         {team.penaltyCount > 0 && (
-                            <Typography variant="caption" color="error">
+                            <Typography variant="caption" color="error" display="block">
                                 Penalties: {team.penaltyCount}
                             </Typography>
                         )}
+                        <Typography variant="caption" color="textSecondary" display="block">
+                            Msg Budget: {team.messageBudget ?? 12000}
+                        </Typography>
                     </Grid>
                 ))}
             </Grid>
