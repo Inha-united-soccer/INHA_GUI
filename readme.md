@@ -114,5 +114,5 @@ We are continuously working to make the **INHA-Player Web Control Center** more 
 * **Remote Configuration Editor** A built-in JSON/YAML editor to modify robot parameters and strategy configurations on-the-fly without needing to manually edit files via SSH terminal.
 
 ### 🚀 Core Vision & Philosophy
-**And much more is in the works.** This roadmap represents only the first steps. We am architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
+And much more is in the works. This roadmap represents only the first steps. We am architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
 **Stay tuned as We continue to redefine the boundaries of Human-Robot Interaction.**
