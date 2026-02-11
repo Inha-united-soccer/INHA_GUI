@@ -12,13 +12,13 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 ## 📸 Screenshots
 
-| Dashboard View | Field Visualization |
+| Dashboard View | Connect to Robot |
 | :---: | :---: |
-| ![Dashboard](./docs/images/dashboard_preview.png) <br> *Main Dashboard & Robot Status Cards* | ![Field](./docs/images/field_preview.png) <br> *Live Localization & Ball Detection* |
+| <img src="https://github.com/user-attachments/assets/13146327-1a4f-477f-87f8-834c51ba048d" width="100%"> <br> *Main Dashboard & Robot Status Cards* |  <img src="https://github.com/user-attachments/assets/4f6fd155-2d5b-4722-90e8-2f2aa0b67385" width="100%"> <br> *Strategy Selection & Deployment Interface* |
 
-| Strategy Deployment | Game Info & Logs |
+| Control Panel | Strategy Deployment |
 | :---: | :---: |
-| ![Strategy](./docs/images/strategy_deploy.png) <br> *Strategy Selection & Deployment Interface* | ![Logs](./docs/images/game_logs.png) <br> *GameController Data & System Logs* |
+| <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="100%"> <br> *Detailed Control Panel & Parameters* | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="100%"> <br> *Connection Management & System Logs* |
 
 ---
 
