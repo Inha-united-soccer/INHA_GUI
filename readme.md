@@ -24,7 +24,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 1.  **Comprehensive Dashboard**
     -   Monitor critical metrics for all robots at a glance, including current state (Ready, Set, Play), battery levels, and network connectivity.
@@ -95,7 +95,7 @@ npm run dev
 
 ---
 
-## 🗺️ Roadmap & Future Enhancements
+## Roadmap & Future Enhancements
 
 We are continuously working to make the **INHA-Player Web Control Center** more robust and feature-rich. Here is what's coming next:
 
