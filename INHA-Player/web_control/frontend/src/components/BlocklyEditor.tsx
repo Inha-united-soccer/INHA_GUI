@@ -3,10 +3,8 @@ import { Box, Typography, Button, Paper, TextField, Snackbar, Alert } from '@mui
 import * as Blockly from 'blockly';
 import axios from 'axios';
 
-// [블록리 에디터 컴포넌트]
-// 사용자가 시각적으로 로봇 행동 트리(Behavior Tree)를 설계할 수 있는 도구입니다.
-// 구글의 Blockly 라이브러리를 사용하여 커스텀 블록(Sequence, Selector, Action 등)을 조립하고,
-// 이를 BehaviorTree.CPP 호환 XML로 변환하여 서버에 저장하거나 로봇에 배포합니다.
+// [블록리 에디터 컴포넌트] 사용자가 시각적으로 로봇 행동 트리(Behavior Tree)를 설계할 수 있는 도구
+// 구글의 Blockly 라이브러리를 사용하여 커스텀 블록(Sequence, Selector, Action 등)을 조립하고 이를 BehaviorTree.CPP 호환 XML로 변환하여 서버에 저장하거나 로봇에 배포
 export default function BlocklyEditor() {
     // DOM 참조 및 상태 관리
     const blocklyDiv = useRef<HTMLDivElement>(null); // 에디터가 그려질 div
@@ -170,10 +168,8 @@ export default function BlocklyEditor() {
     );
 }
 
-// [커스텀 블록 정의 함수]
-// Behavior Tree의 각 노드에 대응하는 시각적 블록을 정의합니다.
-// Sequence, Selector는 자식 블록(Statement Input)을 가질 수 있고,
-// Condition과 Action은 단일 블록으로 동작합니다.
+// [커스텀 블록 정의 함수] Behavior Tree의 각 노드에 대응하는 시각적 블록을 정의
+// Sequence, Selector는 자식 블록(Statement Input)을 가질 수 있고 Condition과 Action은 단일 블록으로 동작
 function defineCustomBlocks() {
     // 1. Sequence (순차 실행)
     Blockly.Blocks['bt_sequence'] = {
@@ -277,8 +273,7 @@ function defineCustomBlocks() {
     };
 }
 
-// [XML 생성기]
-// Blockly 블록 구조를 재귀적으로 순회하며 BehaviorTree XML 문자열로 변환합니다.
+// [XML 생성기] Blockly 블록 구조를 재귀적으로 순회하며 BehaviorTree XML 문자열로 변환
 function generateBTXml(workspace: Blockly.WorkspaceSvg): string {
     const topBlocks = workspace.getTopBlocks(true);
     if (topBlocks.length === 0) return "";
@@ -337,11 +332,9 @@ function blockToXml(block: Blockly.Block): string {
     // 다음 연결된 블록 처리 (Next Connection)
     // Blockly의 'next' 연결은 BT에서는 보통 형제 노드(Sibling)로 취급되지만,
     // 여기서는 Sequence나 Selector 내부의 children statement에서 재귀적으로 호출되므로,
-    // 단순 next 연결을 수평적으로 나열하면 됩니다.
+    // 단순 next 연결을 수평적으로 나열하면 된다
 
-    // 단, 이 함수는 단일 블록의 XML만 반환하는게 아니라, 
-    // getChildrenXml에서 nextBlock을 순회하므로, 여기서는 단일 노드만 반환하는게 맞음.
-    // 하지만 구조상 nextBlock은 "형제" 관계임.
+    // 단, 이 함수는 단일 블록의 XML만 반환하는게 아니라,getChildrenXml에서 nextBlock을 순회하므로, 여기서는 단일 노드만 반환하는게 맞음. 하지만 구조상 nextBlock은 형제 관계임
 
     return xml;
 }

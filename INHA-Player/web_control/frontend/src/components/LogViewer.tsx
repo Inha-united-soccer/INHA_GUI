@@ -18,9 +18,12 @@ const LogViewer = ({ open, onClose, robots }: Props) => {
         }
     }, [robots, open]);
 
+    // [로그 새로고침 함수]
+    // 백엔드의 GET /api/logs/{id} API를 호출하여 최신 로그 데이터를 가져옴
     const fetchLogs = async () => {
         if (!selectedRobot) return;
         try {
+            // launcher.log의 마지막 100줄을 응답받음
             const res = await axios.get(`http://localhost:8000/api/logs/${selectedRobot}`);
             setLogContent(res.data.log);
         } catch (e) {
@@ -29,6 +32,7 @@ const LogViewer = ({ open, onClose, robots }: Props) => {
         }
     };
 
+    // 로봇 선택이 바뀌면 자동으로 새로운 로그를 가져옴
     useEffect(() => {
         if (open && selectedRobot) {
             fetchLogs();
@@ -51,6 +55,7 @@ const LogViewer = ({ open, onClose, robots }: Props) => {
                                 {robots.map(id => <MenuItem key={id} value={id}>{id}</MenuItem>)}
                             </Select>
                         </FormControl>
+                        {/* Refresh 버튼을 누르면 fetchLogs()가 재실행되어 최신 로그를 반영 */}
                         <Button variant="outlined" onClick={fetchLogs}>Refresh</Button>
                         <Button onClick={onClose}>Close</Button>
                     </Box>

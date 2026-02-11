@@ -13,13 +13,13 @@ interface FieldVisualizerProps {
 }
 
 // [경기장 시각화 컴포넌트]
-// HTML5 Canvas API를 사용하여 초록색 축구장과 로봇들의 위치를 2D로 그립니다.
+// HTML5 Canvas API를 사용하여 초록색 축구장과 로봇들의 위치를 2D로
 const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
     // Canvas DOM 요소에 접근하기 위한 Ref
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     // [렌더링 루프]
-    // 로봇 데이터나 컴포넌트가 로드될 때마다 다시 그립니다.
+    // 로봇 데이터나 컴포넌트가 로드될 때마다 다시 그림
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -39,23 +39,25 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
     }, [robots]);
 
     // [좌표 변환 함수]
-    // 로봇의 실제 좌표(미터)를 캔버스 좌표(픽셀)로 변환합니다.
+    // 로봇의 실제 좌표(미터)를 캔버스 좌표(픽셀)로 변환
     const toCanvasCoords = (x: number, y: number) => {
-        // 실제 좌표계: 중앙이 (0,0), x는 좌우(-7~7), y는 상하(-4.5~4.5)
-        // 캔버스 좌표계: 좌상단이 (0,0), x는 우측 증가(0~800), y는 하단 증가(0~600)
+        // 실제 경기장: 가로 14m (-7 ~ 7), 세로 9m (-4.5 ~ 4.5)
+        // 캔버스 크기: 800x600 픽셀
 
-        // X 좌표 변환: (-7 ~ 7) -> (0 ~ 800)
-        // (x + 절반) / 전체길이 * 캔버스폭
+        // 1. X 좌표 변환: (-7 ~ 7) -> (0 ~ 14) -> 비율조정 -> (0 ~ 800)
+        // (x + 절반너비) / 전체너비 * 캔버스너비
         const cx = (x + REAL_WIDTH / 2) / REAL_WIDTH * FIELD_WIDTH;
 
-        // Y 좌표 변환: (-4.5 ~ 4.5) -> (0 ~ 600)
-        // 캔버스 Y축은 아래로 갈수록 커지므로 부호를 반대로 뒤집어야 함 (-y)
+        // 2. Y 좌표 변환: (-4.5 ~ 4.5) -> (0 ~ 600)
+        // 주의: 캔버스는 아래로 갈수록 Y가 커지지만, 로봇 좌표계는 위가 +Y일 수 있음
+        // 여기서는 일반적인 로봇 좌표계(위가 +)를 가정하여 부호를 반전(-y)시킴
         const cy = ((-y) + REAL_HEIGHT / 2) / REAL_HEIGHT * FIELD_HEIGHT;
 
         return { cx, cy };
     };
 
     // [경기장 그리기]
+    // 초록색 잔디와 흰색 라인을 그림
     const drawField = (ctx: CanvasRenderingContext2D) => {
         // 배경 (잔디색)
         ctx.fillStyle = '#4CAF50';
@@ -65,11 +67,10 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 4;
 
-        // 외곽선 (Border)
-        // 여백을 20px씩 두고 그립니다.
+        // 외곽선 (Touch Lines & Goal Lines)
         ctx.strokeRect(20, 20, FIELD_WIDTH - 40, FIELD_HEIGHT - 40);
 
-        // 중앙선 (Center Line)
+        // 중앙선 (Halfway Line)
         ctx.beginPath();
         ctx.moveTo(FIELD_WIDTH / 2, 20);
         ctx.lineTo(FIELD_WIDTH / 2, FIELD_HEIGHT - 20);
@@ -82,17 +83,18 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
     };
 
     // [로봇 그리기]
+    // 로봇을 원 형태로 그리고, ID와 역할을 텍스트로 표시
     const drawRobot = (ctx: CanvasRenderingContext2D, id: string, x: number, y: number, role: string) => {
         const { cx, cy } = toCanvasCoords(x, y);
 
         ctx.beginPath();
-        // 로봇을 반지름 15px의 원으로 표현
+        // 로봇 본체 (반지름 15px 원)
         ctx.arc(cx, cy, 15, 0, Math.PI * 2);
 
-        // 로봇 ID에 따른 색상 구분 (예시)
-        if (id === 'robot_1') ctx.fillStyle = 'red';
-        else if (id === 'robot_2') ctx.fillStyle = 'blue';
-        else ctx.fillStyle = 'yellow';
+        // 로봇 ID에 따른 색상 구분
+        if (id === 'robot_1') ctx.fillStyle = 'red';      // GK
+        else if (id === 'robot_2') ctx.fillStyle = 'blue'; // Striker
+        else ctx.fillStyle = 'yellow';                    // Others
 
         ctx.fill();
         ctx.strokeStyle = 'black';

@@ -28,7 +28,7 @@ const SSHConnectionDialog = ({ open, onClose, onConnected, initialRobotId }: SSH
     }, [initialRobotId]);
 
     // [연결 요청 핸들러]
-    // Connect 버튼 클릭 시 백엔드(/api/connect)로 연결 요청을 보냅니다.
+    // Connect 버튼 클릭 시 백엔드(/api/connect)로 연결 요청 보냄
     const handleConnect = async () => {
         setLoading(true);
         try {

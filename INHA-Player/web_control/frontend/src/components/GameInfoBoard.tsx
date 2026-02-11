@@ -35,14 +35,15 @@ const GameInfoBoard = ({ info }: Props) => {
     return (
         <Paper sx={{ p: 2, mb: 2, bgcolor: '#f5f5f5' }}>
             <Grid container alignItems="center" spacing={2}>
-                {/* Timer & State */}
+                {/* [경기 시간 및 상태] */}
+                {/* 남은 시간(분:초)과 현재 게임 단계(READY, PLAYING 등)를 가운데 정렬로 표시 */}
                 <Grid item xs={4} sx={{ textAlign: 'center' }}>
                     <Typography variant="h3" sx={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
                         {formatTime(info.secsRemaining)}
                     </Typography>
                     <Box sx={{ mt: 1 }}>
                         <Chip
-                            label={info.state}
+                            label={info.state} // 예: PLAYING
                             color={info.state === 'PLAYING' ? 'success' : (info.state === 'READY' ? 'warning' : 'default')}
                             sx={{ fontWeight: 'bold' }}
                         />
@@ -52,7 +53,8 @@ const GameInfoBoard = ({ info }: Props) => {
                     </Box>
                 </Grid>
 
-                {/* Scoreboard */}
+                {/* [스코어보드] */}
+                {/* BLUE팀과 RED팀의 점수를 나란히 표시 */}
                 {info.teams && info.teams.map((team, idx) => (
                     <Grid item xs={4} key={idx} sx={{ textAlign: 'center', borderLeft: idx === 1 ? '1px solid #ddd' : 'none' }}>
                         <Typography variant="h6" sx={{ color: teamColors[idx] || 'gray', fontWeight: 'bold' }}>

@@ -11,12 +11,13 @@ from ros_bridge import init_ros, ros_bridge
 from glob import glob
 
 # FastAPI 앱 초기화
-# 이 파일(app.py)은 웹 관제 시스템의 백엔드 서버 메인 파일로 프론트엔드(React)와 로봇(ROS/SSH) 사이의 중계 역할을 담당한다
+# 이 파일(app.py)은 웹 관제 시스템의 백엔드 서버 메인 파일로 프론트엔드(React)와 로봇(ROS, SSH) 사이의 중계 역할을 담당한다
 # REST API: 로봇 연결, 전략 배포, 파일 저장/로드
 # WebSocket: 실시간 로봇 상태(위치, 배터리 등) 스트리밍
 app = FastAPI()
 
 # CORS 설정 (Cross-Origin Resource Sharing) 보안 정책 상, 다른 포트(3000번 React)에서 이 서버(8000번)로 요청을 보낼 때 차단되지 않도록 허용한다
+# 웹 브라우저의 보안 정책으로 인해 다른 포트(React 3000번 vs API 8000번) 간의 통신은 기본적으로 차단되는데 이를 허용해주는 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 모든 출처(Origin)에서의 접근을 허용 (개발 편의성)
@@ -25,54 +26,49 @@ app.add_middleware(
     allow_headers=["*"],  # 모든 HTTP 헤더 허용
 )
 
-# [Cache Control] Disable caching for all responses to ensure freshness
+# 캐쉬 컨트롤 -> 브라우저가 예전 데이터 캐싱(기억)하지 못하게 막는 역할
 @app.middleware("http")
-async def add_no_cache_header(request, call_next):
+async def add_no_cache_header(request, call_next): 
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
 
-# 프론트엔드 빌드 결과물 경로 설정
-# React 프로젝트를 'npm run build'로 빌드하면 생성되는 'dist' 폴더를 연결한다 - /frontend/dist
+# 프론트엔드 빌드 결과물 경로 설정 -> React를 빌드한 결과물(dist 폴더)을 서버가 인식하게 한다
 FRONTEND_DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../frontend/dist")
 
 # 정적 파일 서빙 (CSS, JS, 이미지 등) HTML이 아닌 부가 리소스들을 브라우저가 가져갈 수 있도록 경로를 마운트한다
 if os.path.exists(FRONTEND_DIST_DIR):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST_DIR, "assets")), name="assets")
 
-# 메인 페이지 라우팅 ("/")
-# 브라우저로 접속했을 때 React 앱의 진입점(index.html)을 보여준다
+# 메인 페이지 라우팅 ("/") -> 브라우저로 접속했을 때 React 앱의 진입점(index.html)을 보여준다
 @app.get("/")
 async def serve_index():
     if os.path.exists(os.path.join(FRONTEND_DIST_DIR, "index.html")):
         return FileResponse(os.path.join(FRONTEND_DIST_DIR, "index.html"))
     return {"message": "Frontend build not found. Please run 'npm run build' in frontend directory."}
 
-# ROS 2 노드 초기화
-# 서버 시작 시 ROS 2 노드를 생성하여 토픽 통신을 준비한다
+# ROS 2 노드 초기화 -> 서버 시작 시 ROS 2 노드를 생성하여 토픽 통신을 준비한다
 # Mac 등 ROS가 없는 환경에서는 예외가 발생하며, 이 경우 자동으로 시뮬레이션 모드로 동작하거나 UDP 모니터를 사용한다 // 삭제 예정
 try:
-    ros_bridge_node = init_ros()
+    ros_bridge_node = init_ros() # 서버가 켜질 때 ROS 2 노드 준비
 except Exception as e:
     print(f"Warning: ROS 2 init failed (Sim Mode?): {e}")
 
-# [데이터 모델] 로봇 연결 설정
-# 프론트엔드에서 보낸 JSON 데이터를 파싱하기 위한 Pydantic 모델
+# 로봇 연결 설정 -> 프론트엔드에서 보낸 JSON 데이터를 파싱하기 위한 Pydantic 모델
 class RobotConfig(BaseModel):
     id: str       # 로봇 식별자 (예: robot_1)
     ip: str       # 로봇의 IP 주소 (예: 192.168.0.10)
     username: str # SSH 접속 계정명 (예: booster)
     password: str # SSH 접속 비밀번호
 
-# [데이터 모델] 쉘 명령어 실행 요청
+# 쉘 명령어 실행 요청
 class Command(BaseModel):
     robot_id: str # 명령을 수행할 로봇 ID
     cmd: str      # 실행할 리눅스 쉘 명령어 (예: sudo reboot)
 
-# [API] 로봇 SSH 연결
-# 사용자가 'Connect' 버튼을 눌렀을 때 호출된다
+# 프론트엔드에서 입력한 IP와 비번으로 로봇에 SSH 원격 접속을 시도함 -> 사용자가 'Connect' 버튼을 눌렀을 때 호출된다
 @app.post("/api/connect")
 def connect_robot(config: RobotConfig):
     print(f"[API] Connect request: {config.id}@{config.ip}")
@@ -81,9 +77,8 @@ def connect_robot(config: RobotConfig):
         raise HTTPException(status_code=400, detail="Connection Failed")
     return {"status": "connected", "id": config.id}
 
-# [API] 쉘 명령어 전송
-# 'Start Program', 'Reboot' 등의 버튼을 눌렀을 때 호출된다
-@app.post("/api/command")
+# 쉘 명령어 전송 -> 'Start Program', 'Reboot' 등 버튼을 눌렀을 때 호출된다
+@app.post("/api/command") # 로봇에게 직접 리눅스 명령어를 내림
 def send_command(command: Command):
     print(f"[API] Command request: {command.cmd} -> {command.robot_id}")
     
@@ -102,14 +97,12 @@ def send_command(command: Command):
         raise HTTPException(status_code=500, detail=stderr)
     return {"stdout": stdout, "stderr": stderr}
 
-# [데이터 모델] 전략 배포 요청
+# 전략 배포 요청
 class StrategyDeploy(BaseModel):
     robot_id: str = "all" # 특정 로봇 ID 또는 "all"(전체)
     strategy_xml: str     # 배포할 Behavior Tree XML 내용
 
-# [API] 전략 배포 (Hot-Swap)
-# 작성한 전략(XML)을 로봇에게 전송하여 즉시 적용시킨다
-# 로봇 내부에서 'ros2 topic pub' 명령을 실행하는 방식으로 동작한다
+# 전략 배포 (Hot-Swap) -> 토글의 전략(XML)을 로봇에게 전송하여 즉시 적용시킨다 -> 로봇 내부에서 'ros2 topic pub' 명령을 실행하는 방식으로 동작한다
 @app.post("/api/deploy_strategy")
 def deploy_strategy_endpoint(data: StrategyDeploy):
     # 1. 파일 내용(XML) 추출
@@ -151,19 +144,18 @@ def deploy_strategy_endpoint(data: StrategyDeploy):
 # 전략 파일들이 저장될 디렉토리
 STRATEGY_DIR = "strategies"
 
-# [API] 저장된 전략 목록 조회
-# strategies 폴더 내의 모든 .xml 파일 이름을 반환한다
+# 저장된 전략 목록 조회 -> strategies 폴더 내의 모든 .xml 파일 이름을 반환한다
 @app.get("/api/strategies")
 async def list_strategies():
     files = glob(os.path.join(STRATEGY_DIR, "*.xml"))
     return {"strategies": [os.path.basename(f) for f in files]}
 
-# [데이터 모델] 전략 저장 요청
+# 전략 저장 요청
 class StrategySave(BaseModel):
     name: str # 파일명 (확장자 제외 가능)
     xml: str  # 파일 내용
 
-# [API] 전략 저장
+# 전략 저장
 # Blockly로 작성한 전략을 서버에 파일로 저장한다 // 삭제 예정
 @app.post("/api/strategies")
 async def save_strategy(data: StrategySave):
@@ -173,8 +165,7 @@ async def save_strategy(data: StrategySave):
         f.write(data.xml)
     return {"status": "saved", "name": filename}
 
-# [API] 특정 전략 불러오기
-# 저장된 XML 파일의 내용을 읽어서 반환한다
+# 특정 전략 불러오기 -> 저장된 XML 파일의 내용을 읽어서 반환한다
 @app.get("/api/strategies/{name}")
 async def load_strategy(name: str):
     path = os.path.join(STRATEGY_DIR, name)
@@ -187,20 +178,19 @@ from udp_monitor import udp_monitor
 
 from gc_monitor import gc_monitor
 
-# [API] 비상 정지 (Emergency Stop)
-# 모든 연결된 로봇에게 SetVelocity<0,0,0> 전략을 배포하여 즉시 정지시킨다
+# 비상 정지 (Emergency Stop) -> 모든 연결된 로봇에게 SetVelocity<0,0,0> 전략을 배포하는 방식으로 정지시킴
 @app.post("/api/emergency_stop")
 def emergency_stop():
     print("[API] Emergency Stop Requested!")
     
     # 정지용 전략 XML
     stop_xml = """
-<root main_tree_to_execute="MainTree">
-    <BehaviorTree ID="MainTree">
-        <SetVelocity vx="0.0" vy="0.0" w="0.0"/>
-    </BehaviorTree>
-</root>
-"""
+    <root main_tree_to_execute="MainTree">
+        <BehaviorTree ID="MainTree">
+            <SetVelocity vx="0.0" vy="0.0" w="0.0"/>
+        </BehaviorTree>
+    </root>
+    """
     connected_robots = list(ssh_manager.clients.keys())
     if not connected_robots:
         raise HTTPException(status_code=400, detail="No robots connected")
@@ -212,14 +202,13 @@ def emergency_stop():
         
     return {"status": "executed", "results": results}
 
-# [API] 로그 조회
+# 로그 조회
 @app.get("/api/logs/{robot_id}")
 def get_logs(robot_id: str):
     log_content = ssh_manager.fetch_log(robot_id, lines=100)
     return {"id": robot_id, "log": log_content}
 
-# [WebSocket] 실시간 상태 스트리밍 엔드포인트
-# 프론트엔드가 이 주소로 웹소켓을 연결하면, 0.5초마다 로봇들의 최신 상태를 JSON으로 전송한다
+# 실시간 상태 스트리밍 엔드포인트 -> 프론트엔드가 이 주소로 웹소켓을 연결하면, 0.5초마다 로봇들의 최신 상태를 JSON으로 전송한다
 @app.websocket("/ws/status")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept() # 연결 수락
@@ -250,3 +239,5 @@ if __name__ == "__main__":
     import uvicorn
     # uvicorn 서버 실행 (호스트 0.0.0.0은 외부 접속 허용을 의미)
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# 데이터 모델 : 프론트엔드와의 데이터 통신을 위한 모델, API : 버튼을 누르는 등의 일회성 동작, 웹소켓 : 실시간 데이터 통신

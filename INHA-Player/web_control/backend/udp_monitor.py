@@ -6,6 +6,8 @@ import time
 import json
 import math
 
+# 팀 통신 패킷 가져오는 파일
+
 # C++ TeamCommunicationMsg Structure Layout (Standard Alignment)
 # int validation;        // 0-3
 # int communicationId;   // 4-7
@@ -69,13 +71,13 @@ class UDPMonitor:
         self.running = True
         
         # 1. 수신 스레드 시작
-        # 들어오는 패킷을 계속해서 받아서 파싱합니다.
+        # 들어오는 패킷을 계속해서 받아서 파싱
         self.thread = threading.Thread(target=self.loop, daemon=True)
         self.thread.start()
         
         # 2. Discovery(생존 신고) 방송 스레드 시작
-        # 로봇은 '아는 팀원'에게만 데이터를 보냅니다.
-        # 따라서 Mac이 주기적으로 "나도 팀원(99번)이야"라고 알려줘야 로봇이 데이터를 보내줍니다.
+        # 로봇은 '아는 팀원'에게만 데이터를 보냄
+        # 따라서 Mac이 주기적으로 "나도 팀원(99번)이야"라고 알려줘야 로봇이 데이터를 보내줌
         self.discovery_thread = threading.Thread(target=self.broadcast_discovery, daemon=True)
         self.discovery_thread.start()
 

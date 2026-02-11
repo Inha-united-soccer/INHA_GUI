@@ -150,18 +150,17 @@ const DashboardComp = () => {
             </Box>
 
             {/* 1. 게임 정보 보드 (GameController) */}
+            {/* 상단에 경기 시간, 점수, 상태(READY, PLAY 등)를 표시하는 컴포넌트 */}
             {gameInfo && <GameInfoBoard info={gameInfo} />}
 
             <Grid container spacing={3}>
                 {/* 2. 로봇 상태 카드 목록 (상단) */}
+                {/* 연결된 로봇들의 개별 상태(배터리, 역할, 전략)를 카드 형태로 나열 */}
                 {['robot_1', 'robot_2', 'robot_3', 'robot_4', 'robot_5'].map(id => {
                     const robot = robots[id] || {};
                     const isConnected = connectedRobots.includes(id);
                     // 역할 뱃지 & 상세 상태
                     const roleLabel = robot.role || (id === 'robot_1' ? 'GK' : 'Field');
-
-                    // 상세 상태 표시 (cmd, cost 등)
-                    // TODO: Backend should parse these into readable strings if possible
 
                     return (
                         <Grid item xs={12} sm={6} md={2.4} key={id}>
@@ -190,7 +189,8 @@ const DashboardComp = () => {
                                     <Chip label="Ball Found" size="small" color="success" sx={{ mb: 1, mr: 0.5 }} />
                                 )}
 
-                                {/* 전략 선택 & 적용 섹션 (스크린샷 참조) */}
+                                {/* 전략 선택 & 적용 섹션 */}
+                                {/* 사용자가 드롭다운에서 전략(.xml)을 선택하고 APPLY 버튼을 누르면 해당 로봇에 배포됨 */}
                                 <Paper variant="outlined" sx={{ p: 1, mb: 2, bgcolor: '#f9f9f9' }}>
                                     <FormControl fullWidth size="small" sx={{ mb: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -228,6 +228,7 @@ const DashboardComp = () => {
                                 </Paper>
 
                                 {/* 연결 및 제어 버튼 */}
+                                {/* 로봇과 아직 SSH 연결이 안되어 있으면 CONNECT, 되어 있으면 CONTROL 버튼 표시 */}
                                 {isConnected ? (
                                     <Button
                                         variant="contained"
@@ -261,6 +262,7 @@ const DashboardComp = () => {
                 <Grid item xs={12}>
                     <Grid container spacing={3}>
                         {/* 좌측: Field Visualizer */}
+
                         <Grid item xs={12} md={controlTarget ? 6 : 12}>
                             <Paper sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
                                 <FieldVisualizer robots={robots} />
