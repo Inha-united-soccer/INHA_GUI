@@ -92,3 +92,21 @@ npm run dev
 
 - WebSocket: Real-time UI updates
 - HTTP: RESTful commands and file transfers
+
+---
+
+## 🗺️ Roadmap & Future Enhancements
+
+We are continuously working to make the **INHA-Player Web Control Center** more robust and feature-rich. Here is what's coming next:
+
+* **🔒 Game Lock Mechanism** To prevent accidental command inputs during critical match moments, a "Game Lock" mode will be implemented. Once activated, sensitive UI controls will be disabled to ensure system stability.
+
+* **🎮 Control Authority Handoff** Implementing a seamless transition system for joystick control. This will allow multiple operators to hand over control authority or switch between manual and autonomous modes without interruption.
+
+* **📊 Live Telemetry & Topic Visualization** Expanding data integration to subscribe to internal robot topics (ROS-based). This will allow for real-time visualization of sensor data, motor temperatures, and higher-level diagnostics directly in the browser.
+
+* **🛠 Remote Configuration Editor** A built-in JSON/YAML editor to modify robot parameters and strategy configurations on-the-fly without needing to manually edit files via SSH terminal.
+
+### 🚀 Beyond the Horizon
+**And much more is in the works.** This roadmap represents only the first steps. We am architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
+**Stay tuned as We continue to redefine the boundaries of Human-Robot Interaction.**
