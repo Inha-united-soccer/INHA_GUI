@@ -72,25 +72,21 @@ npm install
 npm run dev
 ```
 
-🛠 Tech Stack
-Frontend
+## 🛠 Tech Stack
 
-React, TypeScript, Vite
+### Frontend
 
-Material-UI (MUI) for styling
+- React, TypeScript, Vite
+- Material-UI (MUI) for styling
+- React-Use-Websocket for real-time data
 
-React-Use-Websocket for real-time data
+### Backend
 
-Backend
+- Python, FastAPI, Asyncio
+- Paramiko (SSH Management)
+- Struct (UDP Packet Parsing)
 
-Python, FastAPI, Asyncio
+### Communication
 
-Paramiko (SSH Management)
-
-Struct (UDP Packet Parsing)
-
-Communication
-
-WebSocket: Real-time UI updates
-
-HTTP: RESTful commands and file transfers
+- WebSocket: Real-time UI updates
+- HTTP: RESTful commands and file transfers
