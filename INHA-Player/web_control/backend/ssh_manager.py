@@ -80,27 +80,9 @@ class SSHManager:
             bt_node = root.find('BehaviorTree')
             strategy_id = bt_node.get('ID') if bt_node is not None else None
             
-            # 영구 저장 대상인지 확인 (Striker, Defender, Goalkeeper 파일명과 일치하면 덮어쓰기 시도) -> 삭제 예정
-            persistence_target = None
-            if strategy_id:
-                lower_id = strategy_id.lower()
-                if lower_id in ['striker', 'defender', 'goalkeeper', 'goalie']:
-                    persistence_target = lower_id
-                    if persistence_target == 'goalie': persistence_target = 'goalkeeper'
-
-            # 전송할 XML 파일 생성 명령어 (Base64 인코딩 사용)
-            xml_b64 = base64.b64encode(xml_content.encode('utf-8')).decode('utf-8')
-            write_xml_cmd = f"echo '{xml_b64}' | base64 -d > /tmp/strategy_deploy.xml"
-
-            # 영구 저장 로직 -> 만약 중요한 역할(Striker 등) 배포라면 원본 XML 파일도 업데이트한다.
+            # Strategy is only deployed to /tmp/strategy_deploy.xml for runtime execution
             persistence_cmd = ""
-            if persistence_target:
-                print(f"[Deploy] Persistence target detected: {persistence_target}")
-                src_path = f"/home/booster/Workspace/GUI/INHA-Player/src/brain/behavior_trees/subtrees/{persistence_target}.xml"
-                install_path = f"/home/booster/Workspace/GUI/INHA-Player/install/brain/share/brain/behavior_trees/subtrees/{persistence_target}.xml"
-                persistence_cmd = f"cp /tmp/strategy_deploy.xml {src_path}; cp /tmp/strategy_deploy.xml {install_path};"
-            else:
-                print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
+            print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
 
             # ROS 2 환경 설정 명령어 (배포 스크립트 실행 전 환경 변수 로드)
             setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
