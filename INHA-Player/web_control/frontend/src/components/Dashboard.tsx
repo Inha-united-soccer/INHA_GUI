@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Grid, Paper, Typography, Button, FormControl, Select, MenuItem, Chip } from '@mui/material';
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
@@ -7,6 +7,7 @@ import CommandPanel from './CommandPanel';
 import SSHConnectionDialog from './SSHConnectionDialog';
 import GameInfoBoard, { GameInfo } from './GameInfoBoard';
 import LogViewer from './LogViewer';
+import StateHistoryBoard, { StateLog } from './StateHistoryBoard';
 
 // [대시보드 컴포넌트]
 // 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
@@ -14,6 +15,11 @@ import LogViewer from './LogViewer';
 const DashboardComp = () => {
     // 1. 로봇 상태 데이터 (웹소켓 수신)
     const [robots, setRobots] = useState<{ [key: string]: any }>({});
+    const prevRobotsRef = useRef<{ [key: string]: any }>({}); // 이전 상태 추적용
+
+    // History Log State
+    const [historyLogs, setHistoryLogs] = useState<StateLog[]>([]);
+    const logIdCounter = useRef(0);
 
     // Default GameInfo state to ensure UI renders
     const defaultGameInfo: GameInfo = {
@@ -30,10 +36,6 @@ const DashboardComp = () => {
 
     // 2. SSH 연결 상태 (연결된 로봇 ID 목록)
     const [connectedRobots, setConnectedRobots] = useState<string[]>([]);
-
-    // ... [Rest of code is unchanged, assume tool preserves context if I don't touch it? No, I must be careful]
-    // I should only replace the start and end as I am using replace_file_content with range.
-
 
     // 3. 현재 제어 패널이 열려있는 로봇 ID (하나만 선택 가능)
     const [controlTarget, setControlTarget] = useState<string | null>(null);
@@ -60,7 +62,53 @@ const DashboardComp = () => {
         if (lastMessage !== null) {
             try {
                 const data = JSON.parse(lastMessage.data);
-                if (data.robots) setRobots(prev => ({ ...prev, ...data.robots }));
+
+                // 로봇 상태 업데이트 (data.robots)
+                if (data.robots) {
+                    setRobots(prev => {
+                        const newRobots = { ...prev, ...data.robots };
+
+                        // History Logging Logic
+                        Object.keys(data.robots).forEach(robotId => {
+                            const newRobot = data.robots[robotId];
+                            const prevRobot = prevRobotsRef.current[robotId];
+
+                            if (prevRobot) {
+                                const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+                                // Check State Refresh (Ball Found vs Searching)
+                                if (newRobot.state !== prevRobot.state) {
+                                    const newLog: StateLog = {
+                                        id: logIdCounter.current++,
+                                        timestamp: now,
+                                        robotId: robotId,
+                                        type: 'STATE',
+                                        oldValue: prevRobot.state || 'Unknown',
+                                        newValue: newRobot.state || 'Unknown'
+                                    };
+                                    setHistoryLogs(prevLogs => [...prevLogs.slice(-99), newLog]); // Keep last 100
+                                }
+
+                                // Check Action Change (Kick, Dribble etc)
+                                if (newRobot.action !== prevRobot.action && newRobot.action !== undefined) {
+                                    const newLog: StateLog = {
+                                        id: logIdCounter.current++,
+                                        timestamp: now,
+                                        robotId: robotId,
+                                        type: 'ACTION',
+                                        oldValue: prevRobot.action || 'NONE',
+                                        newValue: newRobot.action
+                                    };
+                                    setHistoryLogs(prevLogs => [...prevLogs.slice(-99), newLog]);
+                                }
+                            }
+                        });
+
+                        prevRobotsRef.current = newRobots; // Update ref for next comparison
+                        return newRobots;
+                    });
+                }
+
                 if (data.game_info) setGameInfo(data.game_info);
             } catch (e) {
                 console.error("WS Parse Error", e);
@@ -181,9 +229,7 @@ const DashboardComp = () => {
                                 <Typography variant="body2" sx={{ mb: 0.5 }}>
                                     Battery: {robot.battery ? `${robot.battery.toFixed(1)} V` : 'N/A'}
                                 </Typography>
-                                <Typography variant="body2" sx={{ mb: 2 }}>
-                                    State: {robot.state || 'Unknown'}
-                                </Typography>
+
                                 {/* 추가 정보 표시: 공 감지, 킥 등 */}
                                 {robot.ball_x !== undefined && (
                                     <Chip label="Ball Found" size="small" color="success" sx={{ mb: 1, mr: 0.5 }} />
@@ -227,6 +273,8 @@ const DashboardComp = () => {
                                     </Button>
                                 </Paper>
 
+
+
                                 {/* 연결 및 제어 버튼 */}
                                 {/* 로봇과 아직 SSH 연결이 안되어 있으면 CONNECT, 되어 있으면 CONTROL 버튼 표시 */}
                                 {isConnected ? (
@@ -269,10 +317,29 @@ const DashboardComp = () => {
                             </Paper>
                         </Grid>
 
-                        {/* 우측 (또는 전체): SSH Command Center (controlTarget이 있을 때만 표시) */}
+                        {/* 우측 (또는 전체): SSH Command Center + History Board */}
                         {controlTarget && (
                             <Grid item xs={12} md={6}>
-                                <CommandPanel robotId={controlTarget} />
+                                <Grid container spacing={2}>
+                                    {/* Left half: Command Panel */}
+                                    <Grid item xs={12}>
+                                        <CommandPanel
+                                            robotId={controlTarget}
+                                            strategies={strategies}
+                                            selectedStrategy={selectedStrategies[controlTarget] || ''}
+                                            onStrategyChange={(robotId: string, strategy: string) => setSelectedStrategies({ ...selectedStrategies, [robotId]: strategy })}
+                                        />
+                                    </Grid>
+                                    {/* Right half: State History Panel (filtered for this robot) */}
+                                    <Grid item xs={12}>
+                                        <StateHistoryBoard logs={historyLogs.filter(log => log.robotId === controlTarget)} />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Button onClick={() => setControlTarget(null)} fullWidth variant="outlined" sx={{ mt: 1 }}>
+                                            Close Control Panel
+                                        </Button>
+                                    </Grid>
+                                </Grid>
                             </Grid>
                         )}
                     </Grid>
@@ -296,5 +363,4 @@ const DashboardComp = () => {
         </Box>
     );
 };
-
 export default DashboardComp;

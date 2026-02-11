@@ -93,11 +93,13 @@ NodeStatus DefenderDecision::tick() {
     // 1) 공을 모르면 -> find
     if (!(iKnowBallPos || tmBallPosReliable)) {
         newDecision = "find";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::FIND);
         color = 0xFFFFFFFF;
     }
     // 2) non-lead인데 레인 밖이면 -> return (레인 복귀)
     else if (!isLead) {
         newDecision = "return";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::OFFTHEBALL);
         color = 0xFFFF00FF;
         
         if (lastDecision != "return") {
@@ -115,6 +117,7 @@ NodeStatus DefenderDecision::tick() {
     // 3) lead인데 opponent가 너무 가까우면 clearing
     else if (shouldClearing) {
         newDecision = "clearing";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CLEAR);
         color = 0xFFFF00FF;
     }
     // 4) clearing 할 상황은 아닌데 lead이면 -> (기존대로) chase / pass / adjust
@@ -123,6 +126,7 @@ NodeStatus DefenderDecision::tick() {
         bool wasChasing = (lastDecision == "chase");
         if (ballRange > chaseRangeThreshold * (wasChasing ? 0.9 : 1.0)) {
             newDecision = "chase";
+            brain->data->tmMyCmd = static_cast<int>(DecisionType::CHASE);
             color = 0x0000FFFF;
         }
         // 킥(패스) 조건
@@ -135,18 +139,21 @@ NodeStatus DefenderDecision::tick() {
         ) {
             if (passFound) newDecision = "pass";
             else newDecision = "kick";
+            brain->data->tmMyCmd = static_cast<int>(DecisionType::KICK);
             color = 0x00FF00FF;
             brain->data->isFreekickKickingOff = false;
         }
         // 그 외 adjust
         else {
             newDecision = "adjust";
+            brain->data->tmMyCmd = static_cast<int>(DecisionType::ADJUST);
             color = 0xFFFF00FF;
         }
     }
     // 5) non-lead면서 레인 안이면 -> side_chase (항상)
     else {
         newDecision = "side_chase";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CHASE);
         color = 0x00FFFFFF;
     }
 
@@ -196,15 +203,18 @@ NodeStatus DefenderClearingDecide::tick() {
 
     if (ballRange > chaseRangeThreshold * (lastDecision == "chase" ? 0.9 : 1.0)) {
         newDecision = "chase";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CHASE);
         color = 0x0000FFFF;
     } else if (reachedKickDir &&
                brain->data->ballDetected &&
                fabs(ballYaw) < 0.1 &&
                ball.range < 1.5) {
         newDecision = "kick";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::KICK);
         color = 0x00FF00FF;
     } else {
         newDecision = "adjust";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::ADJUST);
         color = 0xFFFF00FF;
     }
 

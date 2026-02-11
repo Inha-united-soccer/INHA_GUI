@@ -52,6 +52,7 @@ NodeStatus StrikerDecision::tick() {
     // 골을 넣었다면 멈추기
     if (brain->data->hasScored) {
         setOutput("decision_out", string("stop_goal"));
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::STOP_GOAL);
         brain->log->logToScreen("tree/Decide", "GOAL SCORED! Stopping...", 0xFF0000FF);
         return NodeStatus::SUCCESS;
     }
@@ -93,6 +94,7 @@ NodeStatus StrikerDecision::tick() {
     /* ----------------------- 1. 공 찾기 ----------------------- */ 
     if (!(iKnowBallPos || tmBallPosReliable)) {
         newDecision = "find";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::FIND);
         color = 0xFFFFFFFF;
     }
 
@@ -100,6 +102,7 @@ NodeStatus StrikerDecision::tick() {
     /* ----------------------- 2. 패스 받기 ----------------------- */ 
     else if (passsignal && !isReceiveTimeout && ballRange > 0.6){
         newDecision = "receive";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::RECEIVE);
         color = 0x00FFFFFF;
     }
     
@@ -109,25 +112,28 @@ NodeStatus StrikerDecision::tick() {
     if (paramDefenseLineX > -9.0) { // 유효한 수비 라인이 설정된 경우
         // 로봇이 라인보다 0.5m 이상 앞에 있으면 복귀
         if (brain->data->robotPoseToField.x > paramDefenseLineX + 0.5) {
-             shouldRetreat = true;
-             brain->log->logToScreen("tree/Decide", format("Retreating to Line: %.2f", paramDefenseLineX), 0xFFFF00FF);
+                shouldRetreat = true;
+                brain->log->logToScreen("tree/Decide", format("Retreating to Line: %.2f", paramDefenseLineX), 0xFFFF00FF);
         }
     }
 
     if ((!brain->data->tmImLead && ballRange >= 1.0) || shouldRetreat) {
         newDecision = "offtheball";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::OFFTHEBALL);
         color = 0x00FFFFFF;
     }
 
     /* ----------------------- 4. 공 chase ----------------------- */
     else if (ballRange > chaseRangeThreshold) {
         newDecision = "chase";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CHASE);
         color = 0x0000FFFF;
     } 
 
     /* ----------------------- 5. 공 드리블 ----------------------- */
     else if (distToGoal > 2.0) {
         newDecision = "dribble";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::DRIBBLE);
         color = 0x00FFFF00; 
     }
 
@@ -172,8 +178,14 @@ NodeStatus StrikerDecision::tick() {
             // && !avoidKick
             && ball.range < kickRange
         ) {
-            if (distToGoal < setPieceGoalDist) newDecision = "kick_quick"; 
-            else newDecision = "kick";      
+            if (distToGoal < setPieceGoalDist) {
+                newDecision = "kick_quick"; 
+                brain->data->tmMyCmd = static_cast<int>(DecisionType::KICK_QUICK);
+            }
+            else {
+                newDecision = "kick";
+                brain->data->tmMyCmd = static_cast<int>(DecisionType::KICK);
+            }      
             
             if (!isLocked) kickLockEndTime = now + rclcpp::Duration::from_seconds(3.0);
             
@@ -184,8 +196,14 @@ NodeStatus StrikerDecision::tick() {
         /* ----------------------- 8. Adjust ----------------------- */
         else {
             // 골대 거리에 따라 Quick vs Normal Adjust 결정
-            if (distToGoal < setPieceGoalDist) newDecision = "adjust_quick";
-            else newDecision = "adjust";
+            if (distToGoal < setPieceGoalDist) {
+                newDecision = "adjust_quick";
+                brain->data->tmMyCmd = static_cast<int>(DecisionType::ADJUST_QUICK);
+            }
+            else {
+                newDecision = "adjust";
+                brain->data->tmMyCmd = static_cast<int>(DecisionType::ADJUST);
+            }
             color = 0xFFFF00FF;
         }
     }

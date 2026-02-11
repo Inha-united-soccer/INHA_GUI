@@ -89,12 +89,15 @@ NodeStatus GoalieDecide::tick()
     // -----------------------------
 	if ((!ballKnown) && (lastDecision == "normal_clearing" || lastDecision == "critical_clearing" || lastDecision == "find")) {
 	    newDecision = "find";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::FIND);
 	}
 	else if (ballInClearingZone && iAmCloser && (!StopClearing)) {
 	    newDecision = FastClearOk ? "normal_clearing" : "critical_clearing";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CLEAR);
 	}
 	else {
 	    newDecision = "hold";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::HOLD);
 	}
 
     setOutput("decision_out", newDecision);
@@ -134,10 +137,12 @@ NodeStatus GoalieClearingDecide::tick()
     // 멀면 chase 유지(히스테리시스 약간)
     if (ballRange > chaseRangeThreshold * (lastDecision == "clearing_chase" ? 0.9 : 1.0)) {
         newDecision = "clearing_chase";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::CHASE);
         color = 0xFFFFFFFF;
     } else {
         // 가까우면 원터치 kick (adjust 없음)
         newDecision = "clearing_kick";
+        brain->data->tmMyCmd = static_cast<int>(DecisionType::KICK);
         color = 0x00FF00FF;
     }
     

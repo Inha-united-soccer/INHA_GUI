@@ -215,3 +215,21 @@ enum class RobotRecoveryState {
     HAS_FALLEN = 2,
     IS_GETTING_UP = 3
 };
+
+enum class DecisionType {
+    NONE = 0,
+    FIND = 1,
+    RECEIVE = 2,
+    OFFTHEBALL = 3,
+    CHASE = 4,
+    DRIBBLE = 5,
+    KICK = 6,
+    KICK_QUICK = 7,
+    ADJUST = 8,
+    ADJUST_QUICK = 9,
+    STOP_GOAL = 10,
+    DEFEND = 11,
+    CLEAR = 12,
+    BLOCK = 13,
+    HOLD = 14
+};

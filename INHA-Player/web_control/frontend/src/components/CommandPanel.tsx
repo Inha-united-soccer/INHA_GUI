@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Paper, Typography, Button, Box, TextField } from '@mui/material';
+import { Paper, Typography, Button, Box, TextField, FormControl, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 
 // [컴포넌트 프로퍼티]
 interface CommandPanelProps {
     robotId: string; // 제어할 단일 로봇 ID
+    strategies: string[];
+    selectedStrategy: string;
+    onStrategyChange: (robotId: string, strategy: string) => void;
 }
 
 // [SSH 명령 제어 패널]
 // 특정 로봇에 대해 쉘 명령을 내리고 터미널 출력을 확인하는 컴포넌트
-const CommandPanel = ({ robotId }: CommandPanelProps) => {
+const CommandPanel = ({ robotId, strategies, selectedStrategy, onStrategyChange }: CommandPanelProps) => {
     const [customCmd, setCustomCmd] = useState('');
     const [logs, setLogs] = useState<string[]>([]);
 
@@ -39,31 +42,77 @@ const CommandPanel = ({ robotId }: CommandPanelProps) => {
         }
     };
 
+    const handleApplyStrategy = async () => {
+        if (!selectedStrategy) {
+            alert("전략을 먼저 선택해주세요!");
+            return;
+        }
+        try {
+            const res = await axios.get(`http://localhost:8000/api/strategies/${selectedStrategy}`);
+            await axios.post('http://localhost:8000/api/deploy_strategy', {
+                robot_id: robotId,
+                strategy_xml: res.data.xml
+            });
+            alert(`[SUCCESS] ${selectedStrategy} -> ${robotId}`);
+        } catch (e: any) {
+            alert(`[FAIL] ${e.response?.data?.detail || e.message}`);
+        }
+    };
+
     return (
-        <Paper elevation={3} sx={{ p: 2, mt: 3 }}>
+        <Paper elevation={3} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
-                SSH Command Center ({robotId})
+                Control Panel ({robotId})
             </Typography>
 
-            {/* 버튼 그룹: Start, Stop, Reboot */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            {/* Strategy Selection Area */}
+            <Paper variant="outlined" sx={{ p: 1, mb: 2, bgcolor: '#f5f5f5' }}>
+                <Typography variant="subtitle2" gutterBottom>Strategy Control</Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <FormControl size="small" fullWidth>
+                        <Select
+                            value={selectedStrategy || ''}
+                            onChange={(e) => onStrategyChange(robotId, e.target.value)}
+                            displayEmpty
+                            sx={{ bgcolor: 'white' }}
+                        >
+                            <MenuItem value="" disabled>Select Strategy</MenuItem>
+                            {strategies.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                    <Button
+                        variant="contained"
+                        sx={{ bgcolor: '#9c27b0', '&:hover': { bgcolor: '#7b1fa2' } }}
+                        onClick={handleApplyStrategy}
+                    >
+                        APPLY
+                    </Button>
+                </Box>
+            </Paper>
+
+            {/* SSH Commands Area */}
+            <Typography variant="subtitle2" gutterBottom>System Commands</Typography>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Button
                     variant="contained"
                     color="primary"
+                    size="small"
                     onClick={() => sendCommand('cd /home/booster/Workspace/Soccer || echo "Dir not found"; source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; nohup ./scripts/start.sh > brain_nohup.log 2>&1 & echo "Executed start.sh from $PWD"')}
                 >
-                    START PROGRAM
+                    START
                 </Button>
                 <Button
                     variant="contained"
                     color="error"
+                    size="small"
                     onClick={() => sendCommand('pkill -f brain_node')}
                 >
-                    STOP PROGRAM
+                    STOP
                 </Button>
                 <Button
                     variant="outlined"
                     color="warning"
+                    size="small"
                     onClick={() => sendCommand('echo "123456" | sudo -S reboot')}
                 >
                     REBOOT
@@ -71,41 +120,42 @@ const CommandPanel = ({ robotId }: CommandPanelProps) => {
                 <Button
                     variant="outlined"
                     color="info"
+                    size="small"
                     onClick={() => sendCommand('cd /home/booster/Workspace/Soccer; echo "=== brain_nohup.log ==="; tail -n 20 brain_nohup.log; echo "\\n=== brain.log ==="; tail -n 20 brain.log')}
                 >
-                    CHECK LOGS
+                    LOGS
                 </Button>
             </Box>
 
-            {/* 커스텀 명령 입력 */}
+            {/* Custom Command */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 <TextField
                     fullWidth
                     size="small"
-                    placeholder="Enter custom command..."
+                    placeholder="Custom command..."
                     value={customCmd}
                     onChange={(e) => setCustomCmd(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && sendCommand(customCmd)}
                 />
-                <Button variant="contained" onClick={() => sendCommand(customCmd)}>
+                <Button variant="contained" size="small" onClick={() => sendCommand(customCmd)}>
                     SEND
                 </Button>
             </Box>
 
-            {/* 터미널 로그 창 */}
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Terminal Output:</Typography>
+            {/* Terminal Output */}
             <Box sx={{
                 bgcolor: 'black',
-                color: '#00ff00', // 해커 스타일 녹색
+                color: '#00ff00',
                 p: 2,
                 borderRadius: 1,
-                height: '200px',
+                flexGrow: 1,
+                minHeight: '200px',
                 overflowY: 'auto',
                 fontFamily: 'monospace',
-                fontSize: '0.9rem'
+                fontSize: '0.85rem'
             }}>
                 {logs.length === 0 ? (
-                    <span style={{ color: 'gray' }}>// Waiting for commands...</span>
+                    <span style={{ color: 'gray' }}>// Ready for commands...</span>
                 ) : (
                     logs.map((log, i) => (
                         <div key={i}>{log}</div>

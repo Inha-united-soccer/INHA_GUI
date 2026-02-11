@@ -49,8 +49,8 @@ class GCMonitor:
             "state": "UNKNOWN",   # 경기 상태 (READY, PLAYING 등)
             "secsRemaining": 0,   # 남은 시간 (초)
             "teams": [            # 두 팀의 점수 정보
-                {"score": 0, "penalty": 0}, # 현재 잘못받아오고 있는 부분
-                {"score": 0, "penalty": 0}
+                {"score": 0, "penaltyCount": 0},
+                {"score": 0, "penaltyCount": 0}
             ],
             "secondaryState": "NONE", # 세부 상태 (페널티킥, 프리킥 등)
             "secondaryTime": 0
@@ -104,7 +104,7 @@ class GCMonitor:
             # 파싱 데이터 업데이트
             self.data["state"] = state_str
             self.data["secsRemaining"] = secs_remaining
-            self.data["secondaryState"] = f"Phase {game_phase}"
+            self.data["secondaryState"] = f"Phase {game_phase}" # 상세 단계
             self.data["secondaryTime"] = secondary_time
             
             # 2. 팀 정보 파싱 (두 팀)
@@ -112,7 +112,7 @@ class GCMonitor:
             offset = 18
             parsed_teams = []
             
-            MAX_NUM_PLAYERS = 11 # 헤더에 따라 다를 수 있으나 우선 11명분 데이터
+            MAX_NUM_PLAYERS = 11 # 헤더에 따라 다를 수 있으나 보통 11명분 데이터
             
             for i in range(2):
                 # 각 팀의 헤더 정보 (10바이트)
@@ -151,7 +151,7 @@ class GCMonitor:
         except Exception as e:
             print(f"[GC] Parse error: {e}")
 
-    # 파싱이 완료되어 최신화된 데이터 딕셔너리를 외부에 전달
+    # 현재 상태 반환 메소드 (외부에서 호출)
     def get_status(self):
         return self.data
 
