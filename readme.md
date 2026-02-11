@@ -1,3 +1,5 @@
+<div align="center">
+    
 # INHA-Player Web Control Center
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
@@ -9,6 +11,8 @@
 This platform provides real-time status monitoring, dynamic strategy deployment, seamless GameController integration, and live 2D field visualization.
 
 ---
+
+</div>
 
 ## 📸 Interface Preview
 
@@ -24,7 +28,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 ---
 
-## Key Features
+## 💡 Key Features
 
 1.  **Comprehensive Dashboard**
     -   Monitor critical metrics for all robots at a glance, including current state (Ready, Set, Play), battery levels, and network connectivity.
@@ -65,7 +69,7 @@ python app.py
 ```
 Active Ports: 8000 (API), 3838 (GameController UDP), 30001 (Robot UDP)
 
-2. Frontend (React/Vite)
+### 2. Frontend (React/Vite)
 Launch the user interface.
 
 ```bash
