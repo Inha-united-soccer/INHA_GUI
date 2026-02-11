@@ -200,6 +200,7 @@ class UDPMonitor:
                 "theta": rtheta,
                 "ball_x": bx,
                 "ball_y": by,
+                "ball_confidence": unpacked[9],
                 "last_seen": time.time(),
                 "ip": addr[0]
             }
