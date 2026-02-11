@@ -23,6 +23,7 @@
 #include "booster_interface/msg/remote_controller_state.hpp"
 
 #include "RoboCupGameControlData.h"
+#undef NONE
 #include "team_communication_msg.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
