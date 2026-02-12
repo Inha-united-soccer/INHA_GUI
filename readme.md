@@ -1,6 +1,6 @@
 <div align="center">
     
-# INHA-Player Web Control Center
+# INHA Web Control Center
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
