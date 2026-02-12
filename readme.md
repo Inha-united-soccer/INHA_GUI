@@ -44,7 +44,8 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 4.  **Remote SSH & Strategy Management**
     -   Manage robots directly via the web interface using secure SSH connections.
-    -   Upload and deploy strategy files, execute `start.sh` scripts, and stream execution logs directly within the browser.
+    -   **Runtime Hot-Swap (Dynamic Strategy Loading)**: Upload and deploy new behavior strategies instantly **without stopping the robot or restarting the software**.
+    -   Execute `start.sh` scripts and stream execution logs directly within the browser.
 
 5.  **State History & Diagnostics**
     -   Archives state changes and action logs with precise timestamps.
