@@ -7,7 +7,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?logo=fastapi&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 
-**A powerful and intuitive command interface designed for humanoid robots.**
+**A powerful and intuitive command interface designed for humanoid robot systems**
 This platform provides real-time status monitoring, dynamic strategy deployment, seamless GameController integration, and live 2D field visualization.
 
 ---
@@ -31,12 +31,12 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 ## 💡 Key Features
 
 1.  **Comprehensive Dashboard**
-    -   Monitor critical metrics for all robots at a glance, including current state (Ready, Set, Play), battery levels, and network connectivity.
+    -   Monitor critical metrics for all robots at a glance, including their current state (Ready, Set, Play), battery levels, and network connectivity.
     -   Access individual **Command Panels** for granular control over specific units.
 
 2.  **Live Field Visualizer**
     -   Renders real-time robot odometry and ball detection data on an interactive 2D field map.
-    -   Intelligently filters data to display the single most reliable ball position based on the highest confidence score among agents.
+    -   Intelligently filters data to display the most reliable ball position based on the highest confidence score among agents.
 
 3.  **GameController Integration**
     -   Fully compatible with the official **RoboCup GameController (v15 protocol)**.
@@ -44,7 +44,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 4.  **Remote SSH & Strategy Management**
     -   Manage robots directly via the web interface using secure SSH connections.
-    -   Upload and deploy strategy files, execute `start.sh` scripts, and stream execution logs without leaving the browser.
+    -   Upload and deploy strategy files, execute `start.sh` scripts, and stream execution logs directly within the browser.
 
 5.  **State History & Diagnostics**
     -   Archives state changes and action logs with precise timestamps.
@@ -107,12 +107,12 @@ We are continuously working to make the **INHA-Player Web Control Center** more 
 
 * **Game Lock Mechanism** To prevent accidental command inputs during critical match moments, a "Game Lock" mode will be implemented. Once activated, sensitive UI controls will be disabled to ensure system stability.
 
-* **Control Authority Handoff** Implementing a seamless transition system for joystick control. This will allow multiple operators to hand over control authority or switch between manual and autonomous modes without interruption.
+* **Control Authority Handover** Implementing a seamless transition system for joystick control. This will allow multiple operators to hand over control authority or switch between manual and autonomous modes without interruption.
 
 * **Live Telemetry & Topic Visualization** Expanding data integration to subscribe to internal robot topics (ROS-based). This will allow for real-time visualization of sensor data, motor temperatures, and higher-level diagnostics directly in the browser.
 
 * **Remote Configuration Editor** A built-in JSON/YAML editor to modify robot parameters and strategy configurations on-the-fly without needing to manually edit files via SSH terminal.
 
 ### 🚀 Core Vision & Philosophy
-And much more is in the works. This roadmap represents only the first steps. We am architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
-**Stay tuned as We continue to redefine the boundaries of Human-Robot Interaction.**
+We are architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
+**Stay tuned as we continue to redefine the boundaries of Human-Robot Interaction.**
