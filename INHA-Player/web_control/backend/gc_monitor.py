@@ -158,35 +158,13 @@ class GCMonitor:
             # secondaryState(1), secondaryStateInfo(4), dropInTeam(1)
             # dropInTime(2), secsRemaining(2), secondaryTime(2)
             # Total Header: 25 bytes (Check struct.calcsize)
-            header_fmt = "<4sHBBBBBBB4sBHHH"
-            # print(f"[GC] Header FMT Size: {struct.calcsize(header_fmt)}")
-
+            # Total Header: 24 bytes (HL v12)
             if len(data) < 24: return
             
-            try:
-                (header, version, packet_num, players_per_team,
-                 game_type, state, first_half, kick_off_team,
-                 sec_state, sec_state_info_bytes, drop_in_team,
-                 drop_in_time, secs_remaining, secondary_time) = struct.unpack(header_fmt, data[0:25])
-            except Exception as e:
-                print(f"[GC] Header Unpack Failed: {e}. Data slice len: {len(data[0:25])}, FMT Size: {struct.calcsize(header_fmt)}")
-                # Fallback to 24 bytes if 25 fails, just to test? 
-                # Actually, based on previous error 'requires 23 bytes' when using 25 slice with 24 format...
-                # Let's trust that the HEADER is indeed 25 bytes in HL v12.
-                # If the packet is 688 bytes, and 2 teams are 664 bytes, then header is 24 bytes.
-                # 688 - 664 = 24.
-                # So header MUST be 24 bytes.
-                # Which field is missing or compressed?
-                # Maybe 'secondaryStateInfo' is actually 3 bytes? No.
-                # Maybe 'version' is 1 byte? No, line 79 unpacks 'H' (2 bytes).
-                # Maybe 'secondaryTime' is missing?
-                # Let's try to unpack 24 bytes.
-                try:
-                     header_fmt_24 = "<4sHBBBBBBB4sBHH" # Removed one H (last one?)
-                     # No, let's just re-raise for now to see the log.
-                     raise e
-                except:
-                     return
+            (header, version, packet_num, players_per_team,
+             game_type, state, first_half, kick_off_team,
+             sec_state, sec_state_info_bytes, drop_in_team,
+             drop_in_time, secs_remaining, secondary_time) = struct.unpack("<4sHBBBBBBB4sBHHH", data[0:24])
 
             STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
             state_str = STATE_MAP.get(state, "UNKNOWN")
@@ -208,10 +186,7 @@ class GCMonitor:
             self.data["gameType"] = "HL"
 
             # Teams (HL)
-            # 688 bytes total - 24 bytes header = 664 bytes.
-            # 664 / 2 = 332 per team.
-            # So offset MUST be 24.
-            
+            # Offset 24 starts TeamInfo[2]
             offset = 24
             TEAM_INFO_SIZE = 332
             parsed_teams = []
@@ -220,16 +195,8 @@ class GCMonitor:
                 if len(data) < offset + TEAM_INFO_SIZE: break
                 
                 # Header: 7 bytes
-                # (team_num, color, score, penalty_shot, 
-                #  single_shots, coach_seq) = struct.unpack("<BBBcHxB", data[offset : offset+7]) 
-                
-                # unpack "<BBBBHB" 
-                try:
-                    # print(f"[GC] Unpacking Team Header at {offset}")
-                    (team_num, color, score, penalty_shot, single_shots, coach_seq) = struct.unpack("<BBBBHB", data[offset:offset+7])
-                except Exception as e:
-                    print(f"[GC] Team Header Unpack Failed: {e}. Offset: {offset}, slice len: {len(data[offset:offset+7])}")
-                    raise e
+                # teamNumber(1), fieldPlayerColour(1), score(1), penaltyShot(1), singleShots(2), coachSequence(1)
+                (team_num, color, score, penalty_shot, single_shots, coach_seq) = struct.unpack("<BBBBHB", data[offset:offset+7])
 
                 # Coach Message: 253 bytes (Offset + 7)
                 coach_msg_bytes = data[offset+7 : offset+7+253]
@@ -248,11 +215,7 @@ class GCMonitor:
                 for p in range(11):
                     p_base = players_offset + (p * 6)
                     # HlRobotInfo: penalty(1), secsTillUnpenalised(1), warnings(1), yellow(1), red(1), goalie(1)
-                    try:
-                        (p_penalty, p_secs, p_warn, p_yellow, p_red, p_goalie) = struct.unpack("BBBBBB", data[p_base : p_base+6])
-                    except Exception as e:
-                        print(f"[GC] Player Unpack Failed: {e}. p_base: {p_base}, slice len: {len(data[p_base : p_base+6])}")
-                        raise e
+                    (p_penalty, p_secs, p_warn, p_yellow, p_red, p_goalie) = struct.unpack("BBBBBB", data[p_base : p_base+6])
                     
                     if p_penalty != 0: penalty_count += 1
                     players_info.append({
