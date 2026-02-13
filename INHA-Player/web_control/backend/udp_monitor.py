@@ -187,6 +187,20 @@ class UDPMonitor:
             else:
                 state_desc = "Searching"
 
+            # [Packet Monitor] PPS & Size Calculation
+            now = time.time()
+            packet_size = len(data)
+            
+            # Initialize metrics for new robot
+            if robot_id not in self.robots:
+                # Store temporary metrics in separate dict if needed, or just partial update
+                # Since we overwrite self.robots[robot_id], we need to check previous value or maintain separate state
+                # Let's use a separate dict for tracking pps state
+                pass
+            
+            # Update PPS tracking
+            self._update_pps(robot_id, now)
+
             # Update Status
             self.robots[robot_id] = {
                 "id": robot_id,
@@ -201,11 +215,30 @@ class UDPMonitor:
                 "ball_x": bx,
                 "ball_y": by,
                 "ball_confidence": unpacked[9],
-                "last_seen": time.time(),
-                "ip": addr[0]
+                "last_seen": now,
+                "ip": addr[0],
+                "packet_size": packet_size,
+                "pps": self.packet_rates.get(robot_id, 0.0)
             }
         except Exception as e:
             print(f"[UDP] Parse error: {e}")
+
+    def _update_pps(self, robot_id, now):
+        if not hasattr(self, 'packet_stats'):
+            self.packet_stats = {}
+            self.packet_rates = {}
+
+        if robot_id not in self.packet_stats:
+            self.packet_stats[robot_id] = []
+        
+        # Add current timestamp
+        self.packet_stats[robot_id].append(now)
+        
+        # Remove timestamps older than 1.0 second
+        self.packet_stats[robot_id] = [t for t in self.packet_stats[robot_id] if now - t <= 1.0]
+        
+        # PPS = count of packets in last 1 second
+        self.packet_rates[robot_id] = len(self.packet_stats[robot_id])
 
     def get_status(self):
         # Clean up old robots (timeout 3s)
@@ -213,6 +246,11 @@ class UDPMonitor:
         expired = [rid for rid, r in self.robots.items() if now - r['last_seen'] > 3.0]
         for rid in expired:
             del self.robots[rid]
+            # Also clean up stats
+            if hasattr(self, 'packet_stats') and rid in self.packet_stats:
+                del self.packet_stats[rid]
+                del self.packet_rates[rid]
+                
         return self.robots
 
 udp_monitor = UDPMonitor(team_id=1) # Default Team 1

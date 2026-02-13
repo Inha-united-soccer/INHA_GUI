@@ -62,27 +62,43 @@ class GCMonitor:
 
     def parse_packet(self, data):
         try:
-            # RoboCupGameControlData (v15) Structure Layout:
-            # -------------------------------------------------
-            # header(4s), version(B), packetNumber(B), playersPerTeam(B)
-            # competitionPhase(B), competitionType(B), gamePhase(B)
-            # state(B), setPlay(B), firstHalf(B), kickingTeam(B)
-            # secsRemaining(h), secondaryTime(h)
-            # -------------------------------------------------
-            # Total Header Size: 4 + 1*10 + 2*2 = 18 bytes
-            
-            if len(data) < 18: return
+            # Check Header 'RGme'
+            if len(data) < 4 or data[0:4] != b'RGme': return
 
+            # Read Version (Offset 4, 2 bytes for HL / 1 byte for SPL?)
+            # HL uses uint16_t version, SPL uses uint8_t version.
+            # Let's peek at the next few bytes. 
+            # HL v12: Header(4) + Version(2) = 6 bytes.
+            if len(data) < 6: return
+            
+            # Try to unpack version as uint16 (Little Endian)
+            version = struct.unpack("<H", data[4:6])[0]
+            
+            # If version is 12, it is Humanoid League
+            if version == 12:
+                self.parse_hl_packet(data)
+            # If version is 15 (SPL), likely byte 4 is 15. 
+            elif data[4] == 15: 
+                self.parse_spl_packet(data)
+            else:
+                # print(f"[GC] Unknown version: {version} or {data[4]}")
+                pass
+
+        except Exception as e:
+            print(f"[GC] Parse error: {e}")
+
+    def parse_spl_packet(self, data):
+        # Existing SPL v15 parsing logic...
+        try:
+            if len(data) < 18: return
             (header, version, packet_num, players_per_team, 
              comp_phase, comp_type, game_phase, 
              state, set_play, first_half, kicking_team, 
              secs_remaining, secondary_time) = struct.unpack("<4sBBBBBBBBBBhh", data[0:18])
 
-            # State Mapping
             STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
             state_str = STATE_MAP.get(state, "UNKNOWN")
-
-            # Set Play Mapping (Previous 'secondaryState' concept is split)
+            
             SET_PLAY_MAP = {0: "NONE", 1: "GOAL_KICK", 2: "PUSHING_FREE_KICK", 
                             3: "CORNER_KICK", 4: "KICK_IN", 5: "PENALTY_KICK"}
             set_play_str = SET_PLAY_MAP.get(set_play, "NONE")
@@ -91,55 +107,148 @@ class GCMonitor:
             self.data["secsRemaining"] = secs_remaining
             self.data["secondaryState"] = set_play_str
             self.data["secondaryTime"] = secondary_time
+            self.data["gameType"] = "SPL"
             
-            # Team Info Parsing
-            # Offset 18 starts TeamInfo[2]
+            # Teams (SPL)
             offset = 18
+            TEAM_INFO_SIZE = 10 + (20 * 2) # 50
             parsed_teams = []
-
-            # TeamInfo Structure (v15):
-            # teamNumber(B), fieldPlayerColour(B), goalkeeperColour(B), goalkeeper(B)
-            # score(B), penaltyShot(B), singleShots(H), messageBudget(H)
-            # players(RobotInfo[MAX_NUM_PLAYERS]) 
-            #   -> RobotInfo: penalty(B), secsTillUnpenalised(B)
             
-            # Header of TeamInfo = 1*6 + 2*2 = 10 bytes
-            # Body of TeamInfo = MAX_NUM_PLAYERS(20) * 2 bytes = 40 bytes
-            # Total TeamInfo Size = 50 bytes
-            
-            TEAM_INFO_SIZE = 10 + (MAX_NUM_PLAYERS * 2)
-
             for i in range(2):
                 if len(data) < offset + TEAM_INFO_SIZE: break
-                
-                # Parse Team Header
                 (team_num, field_color, gk_color, gk_num, score, penalty_shot, 
                  single_shots, msg_budget) = struct.unpack("<6B2H", data[offset : offset+10])
-
-                # Parse Players
+                
                 players_offset = offset + 10
                 penalty_count = 0
-                
-                for p in range(MAX_NUM_PLAYERS):
+                players_info = []
+
+                for p in range(20):
                     p_base = players_offset + (p * 2)
                     p_penalty, p_secs = struct.unpack("BB", data[p_base : p_base+2])
-                    if p_penalty != 0: # 0 = PENALTY_NONE
-                        penalty_count += 1
-                
+                    if p_penalty != 0: penalty_count += 1
+                    players_info.append({"penalty": p_penalty, "secs_till_unpenalised": p_secs})
+
                 parsed_teams.append({
                     "teamNumber": team_num,
                     "color": field_color,
                     "score": score,
                     "penaltyCount": penalty_count,
-                    "messageBudget": msg_budget
+                    "messageBudget": msg_budget,
+                    "players": players_info
                 })
+                offset += TEAM_INFO_SIZE
+            
+            self.data["teams"] = parsed_teams
+            
+        except Exception as e:
+            print(f"[GC] SPL Parse error: {e}")
 
+    def parse_hl_packet(self, data):
+        try:
+            # HlRoboCupGameControlData (v12) Structure
+            # header(4), version(2), packetNumber(1), playersPerTeam(1)
+            # gameType(1), state(1), firstHalf(1), kickOffTeam(1)
+            # secondaryState(1), secondaryStateInfo(4), dropInTeam(1)
+            # dropInTime(2), secsRemaining(2), secondaryTime(2)
+            # Total Header: 25 bytes
+            
+            if len(data) < 25: return
+            
+            (header, version, packet_num, players_per_team,
+             game_type, state, first_half, kick_off_team,
+             sec_state, sec_state_info_bytes, drop_in_team,
+             drop_in_time, secs_remaining, secondary_time) = struct.unpack("<4sHBBBBBBB4sBHHH", data[0:24])
+
+            STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
+            state_str = STATE_MAP.get(state, "UNKNOWN")
+            
+            # HL Secondary States (RoboCupGameControlData.h line 48)
+            SEC_STATE_MAP = {
+                0: "NONE", 1: "PENALTY_SHOOT", 2: "OVERTIME", 3: "TIMEOUT",
+                4: "DIRECT_FREEKICK", 5: "INDIRECT_FREEKICK", 6: "PENALTY_KICK",
+                7: "CORNER_KICK", 8: "GOAL_KICK", 9: "THROW_IN"
+            }
+            sec_state_str = SEC_STATE_MAP.get(sec_state, "NONE")
+
+            self.data["state"] = state_str
+            self.data["secsRemaining"] = secs_remaining
+            self.data["secondaryState"] = sec_state_str
+            self.data["secondaryTime"] = secondary_time
+            self.data["dropInTime"] = drop_in_time
+            self.data["dropInTeam"] = drop_in_team
+            self.data["gameType"] = "HL"
+
+            # Teams (HL)
+            # Offset 24 starts TeamInfo[2]
+            # HlTeamInfo Size:
+            # teamNumber(1), colour(1), score(1), penaltyShot(1), singleShots(2), coachSeq(1)
+            # coachMessage(253) -> SPL_COACH_MESSAGE_SIZE
+            # coach(6) -> HlRobotInfo
+            # players(11 * 6) -> HlRobotInfo * 11
+            # Total: 7 + 253 + 6 + 66 = 332 bytes
+            
+            offset = 24
+            TEAM_INFO_SIZE = 332
+            parsed_teams = []
+            
+            for i in range(2):
+                if len(data) < offset + TEAM_INFO_SIZE: break
+                
+                # Header: 7 bytes
+                (team_num, color, score, penalty_shot, 
+                 single_shots, coach_seq) = struct.unpack("<BBBcHxB", data[offset : offset+7]) # 'x' for padding? No, standard packing.
+                 # Wait, struct alignment might assume padding?
+                 # Let's use strict byte reading.
+                 # teamNumber(1), fieldPlayerColour(1), score(1), penaltyShot(1), singleShots(2), coachSequence(1)
+                 # 1+1+1+1+2+1 = 7 bytes.
+                
+                # unpack "<BBBBHB" 
+                (team_num, color, score, penalty_shot, single_shots, coach_seq) = struct.unpack("<BBBBHB", data[offset:offset+7])
+
+                # Coach Message: 253 bytes (Offset + 7)
+                coach_msg_bytes = data[offset+7 : offset+7+253]
+                try:
+                    coach_msg = coach_msg_bytes.decode('utf-8').rstrip('\x00')
+                except:
+                    coach_msg = ""
+                
+                # Players: Offset + 7 + 253 + 6 (Coach Info ignored for now)
+                # Players start at Offset + 266
+                players_offset = offset + 266
+                penalty_count = 0
+                players_info = []
+
+                # HL_MAX_NUM_PLAYERS = 11
+                for p in range(11):
+                    p_base = players_offset + (p * 6)
+                    # HlRobotInfo: penalty(1), secsTillUnpenalised(1), warnings(1), yellow(1), red(1), goalie(1)
+                    (p_penalty, p_secs, p_warn, p_yellow, p_red, p_goalie) = struct.unpack("BBBBBB", data[p_base : p_base+6])
+                    
+                    if p_penalty != 0: penalty_count += 1
+                    players_info.append({
+                        "penalty": p_penalty,
+                        "secs_till_unpenalised": p_secs,
+                        "yellow_cards": p_yellow,
+                        "red_cards": p_red,
+                        "is_goalie": (p_goalie > 0)
+                    })
+
+                parsed_teams.append({
+                    "teamNumber": team_num,
+                    "color": color,
+                    "score": score,
+                    "penaltyCount": penalty_count,
+                    "coachMessage": coach_msg,
+                    "players": players_info
+                })
+                
                 offset += TEAM_INFO_SIZE
 
             self.data["teams"] = parsed_teams
 
         except Exception as e:
-            print(f"[GC] Parse error: {e}")
+            print(f"[GC] HL Parse error: {e}")
 
     def get_status(self):
         return self.data

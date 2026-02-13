@@ -229,6 +229,9 @@ const DashboardComp = () => {
                                 <Typography variant="body2" sx={{ mb: 0.5 }}>
                                     Battery: {robot.battery ? `${robot.battery.toFixed(1)} V` : 'N/A'}
                                 </Typography>
+                                <Typography variant="caption" display="block" sx={{ color: '#555', mb: 1, fontFamily: 'monospace' }}>
+                                    Comm: {robot.pps ? robot.pps.toFixed(1) : '0.0'} Hz | {robot.packet_size || 0} B
+                                </Typography>
 
                                 {/* 추가 정보 표시: 공 감지, 킥 등 */}
                                 {robot.ball_x !== undefined && (
