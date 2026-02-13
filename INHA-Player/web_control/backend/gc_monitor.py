@@ -18,6 +18,10 @@ class GCMonitor:
         # UDP 소켓 생성
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except AttributeError:
+            pass 
         self.sock.settimeout(0.5) 
         
         try:
@@ -61,19 +65,24 @@ class GCMonitor:
                 time.sleep(1)
 
     def parse_packet(self, data):
-        # print(f"[GC] Received {len(data)} bytes") # Verbose debug
+        print(f"[GC] Received {len(data)} bytes") # Verbose debug
         try:
             # Check Header 'RGme'
-            if len(data) < 4: return
-            if data[0:4] != b'RGme': 
-                # print(f"[GC] Invalid header: {data[0:4]}")
+            if len(data) < 4: 
+                print("[GC] Data too short")
                 return
+            if data[0:4] != b'RGme': 
+                print(f"[GC] Invalid header: {data[0:4]}")
+                return
+
+            print(f"[GC] Header OK. Version Byte: {data[4]}")
 
             # Read Version
             if len(data) < 6: return
             
-            # SPL v15 (byte 4)
-            if data[4] == 15: 
+            # SPL v15 or v18 (byte 4)
+            if data[4] == 15 or data[4] == 18: 
+                print(f"[GC] Detected SPL v{data[4]} Packet")
                 self.parse_spl_packet(data)
                 return
 
@@ -82,10 +91,10 @@ class GCMonitor:
             
             # If version is 12, it is Humanoid League
             if version == 12:
+                print(f"[GC] Detected HL v12 Packet (ver={version})")
                 self.parse_hl_packet(data)
             else:
-                pass
-                # print(f"[GC] Unknown version: {version} (uint16) or {data[4]} (uint8)")
+                print(f"[GC] Unknown version: {version} (uint16) or {data[4]} (uint8)")
 
         except Exception as e:
             print(f"[GC] Parse error: {e}")
@@ -153,10 +162,7 @@ class GCMonitor:
                 offset += TEAM_INFO_SIZE
             
             self.data["teams"] = parsed_teams
-            # print(f"[GC] SPL Parsed: {state_str}, Time: {secs_remaining}")
-            
-        except Exception as e:
-            print(f"[GC] SPL Parse error: {e}")
+            print(f"[GC] SPL Parsed: {state_str}, Time: {secs_remaining}")
             
         except Exception as e:
             print(f"[GC] SPL Parse error: {e}")
