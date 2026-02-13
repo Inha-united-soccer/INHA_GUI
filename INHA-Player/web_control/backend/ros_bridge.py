@@ -10,18 +10,10 @@ try:
     from rclpy.node import Node
     from std_msgs.msg import String
     from geometry_msgs.msg import PoseStamped
-    # booster_interface가 없을 경우를 대비한 처리
-    # try:
-    #     from booster_interface.msg import LowState, Odometer
-    # except ImportError:
-    #     # 가짜 클래스 정의 (에러 방지용)
-    #     class LowState: pass
-    #     class Odometer: pass
-    #     print("[WARN] booster_interface not found. Using dummy classes.")
-
+    
     ROS_AVAILABLE = True
 except ImportError:
-    # ROS 2 환경이 아닐 경우 (예: 로컬 테스트), 가상 모드로 동작
+    # ROS 2 환경이 아닐 경우
     ROS_AVAILABLE = False
     class Node: pass # Dummy class
 

@@ -136,6 +136,7 @@ class UDPMonitor:
     # [패킷 파싱]
     # 바이너리 데이터를 python 딕셔너리로 변환
     def parse_packet(self, data, addr):
+        print(f"[UDP] Received {len(data)} bytes from {addr}") # Verbose debug
         try:
             # struct.unpack을 사용하여 바이너리 데이터 해독
             unpacked = struct.unpack(FMT, data)

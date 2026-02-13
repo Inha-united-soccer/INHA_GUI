@@ -61,19 +61,25 @@ class GCMonitor:
                 time.sleep(1)
 
     def parse_packet(self, data):
+        print(f"[GC] Received {len(data)} bytes") # Verbose debug
         try:
             # Check Header 'RGme'
-            if len(data) < 4 or data[0:4] != b'RGme': return
+            if len(data) < 4: 
+                # print("[GC] Data too short")
+                return
+            if data[0:4] != b'RGme': 
+                # print(f"[GC] Invalid header: {data[0:4]}")
+                return
 
             # Read Version (Offset 4, 2 bytes for HL / 1 byte for SPL?)
             # HL uses uint16_t version, SPL uses uint8_t version.
-            # Let's peek at the next few bytes. 
-            # HL v12: Header(4) + Version(2) = 6 bytes.
             if len(data) < 6: return
             
             # Try to unpack version as uint16 (Little Endian)
             version = struct.unpack("<H", data[4:6])[0]
             
+            # print(f"[GC] Version match check: {version} (HL=12)")
+
             # If version is 12, it is Humanoid League
             if version == 12:
                 self.parse_hl_packet(data)
@@ -196,15 +202,16 @@ class GCMonitor:
                 if len(data) < offset + TEAM_INFO_SIZE: break
                 
                 # Header: 7 bytes
-                (team_num, color, score, penalty_shot, 
-                 single_shots, coach_seq) = struct.unpack("<BBBcHxB", data[offset : offset+7]) # 'x' for padding? No, standard packing.
-                 # Wait, struct alignment might assume padding?
-                 # Let's use strict byte reading.
-                 # teamNumber(1), fieldPlayerColour(1), score(1), penaltyShot(1), singleShots(2), coachSequence(1)
-                 # 1+1+1+1+2+1 = 7 bytes.
+                # (team_num, color, score, penalty_shot, 
+                #  single_shots, coach_seq) = struct.unpack("<BBBcHxB", data[offset : offset+7]) 
                 
                 # unpack "<BBBBHB" 
-                (team_num, color, score, penalty_shot, single_shots, coach_seq) = struct.unpack("<BBBBHB", data[offset:offset+7])
+                try:
+                    # print(f"[GC] Unpacking Team Header at {offset}")
+                    (team_num, color, score, penalty_shot, single_shots, coach_seq) = struct.unpack("<BBBBHB", data[offset:offset+7])
+                except Exception as e:
+                    print(f"[GC] Team Header Unpack Failed: {e}. Offset: {offset}, slice len: {len(data[offset:offset+7])}")
+                    raise e
 
                 # Coach Message: 253 bytes (Offset + 7)
                 coach_msg_bytes = data[offset+7 : offset+7+253]
@@ -223,7 +230,11 @@ class GCMonitor:
                 for p in range(11):
                     p_base = players_offset + (p * 6)
                     # HlRobotInfo: penalty(1), secsTillUnpenalised(1), warnings(1), yellow(1), red(1), goalie(1)
-                    (p_penalty, p_secs, p_warn, p_yellow, p_red, p_goalie) = struct.unpack("BBBBBB", data[p_base : p_base+6])
+                    try:
+                        (p_penalty, p_secs, p_warn, p_yellow, p_red, p_goalie) = struct.unpack("BBBBBB", data[p_base : p_base+6])
+                    except Exception as e:
+                        print(f"[GC] Player Unpack Failed: {e}. p_base: {p_base}, slice len: {len(data[p_base : p_base+6])}")
+                        raise e
                     
                     if p_penalty != 0: penalty_count += 1
                     players_info.append({
