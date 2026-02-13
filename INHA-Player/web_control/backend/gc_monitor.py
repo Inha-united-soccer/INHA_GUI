@@ -61,34 +61,31 @@ class GCMonitor:
                 time.sleep(1)
 
     def parse_packet(self, data):
-        print(f"[GC] Received {len(data)} bytes") # Verbose debug
+        # print(f"[GC] Received {len(data)} bytes") # Verbose debug
         try:
             # Check Header 'RGme'
-            if len(data) < 4: 
-                # print("[GC] Data too short")
-                return
+            if len(data) < 4: return
             if data[0:4] != b'RGme': 
                 # print(f"[GC] Invalid header: {data[0:4]}")
                 return
 
-            # Read Version (Offset 4, 2 bytes for HL / 1 byte for SPL?)
-            # HL uses uint16_t version, SPL uses uint8_t version.
+            # Read Version
             if len(data) < 6: return
             
-            # Try to unpack version as uint16 (Little Endian)
+            # SPL v15 (byte 4)
+            if data[4] == 15: 
+                self.parse_spl_packet(data)
+                return
+
+            # HL v12 (uint16 little endian)
             version = struct.unpack("<H", data[4:6])[0]
             
-            # print(f"[GC] Version match check: {version} (HL=12)")
-
             # If version is 12, it is Humanoid League
             if version == 12:
                 self.parse_hl_packet(data)
-            # If version is 15 (SPL), likely byte 4 is 15. 
-            elif data[4] == 15: 
-                self.parse_spl_packet(data)
             else:
-                # print(f"[GC] Unknown version: {version} or {data[4]}")
                 pass
+                # print(f"[GC] Unknown version: {version} (uint16) or {data[4]} (uint8)")
 
         except Exception as e:
             print(f"[GC] Parse error: {e}")
@@ -114,6 +111,9 @@ class GCMonitor:
             self.data["secondaryState"] = set_play_str
             self.data["secondaryTime"] = secondary_time
             self.data["gameType"] = "SPL"
+            # Fill missing HL fields with safe defaults to prevent Frontend errors
+            self.data["dropInTime"] = 0
+            self.data["dropInTeam"] = 0
             
             # Teams (SPL)
             offset = 18
@@ -133,7 +133,13 @@ class GCMonitor:
                     p_base = players_offset + (p * 2)
                     p_penalty, p_secs = struct.unpack("BB", data[p_base : p_base+2])
                     if p_penalty != 0: penalty_count += 1
-                    players_info.append({"penalty": p_penalty, "secs_till_unpenalised": p_secs})
+                    players_info.append({
+                        "penalty": p_penalty, 
+                        "secs_till_unpenalised": p_secs,
+                        "yellow_cards": 0,
+                        "red_cards": 0,
+                        "is_goalie": False
+                    })
 
                 parsed_teams.append({
                     "teamNumber": team_num,
@@ -141,11 +147,16 @@ class GCMonitor:
                     "score": score,
                     "penaltyCount": penalty_count,
                     "messageBudget": msg_budget,
+                    "coachMessage": "", # SPL has no coach message field easily accessible here, or different format
                     "players": players_info
                 })
                 offset += TEAM_INFO_SIZE
             
             self.data["teams"] = parsed_teams
+            # print(f"[GC] SPL Parsed: {state_str}, Time: {secs_remaining}")
+            
+        except Exception as e:
+            print(f"[GC] SPL Parse error: {e}")
             
         except Exception as e:
             print(f"[GC] SPL Parse error: {e}")
