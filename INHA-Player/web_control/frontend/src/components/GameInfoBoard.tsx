@@ -104,7 +104,7 @@ const GameInfoBoard = ({ info }: Props) => {
                         {team.players && team.players.some(p => p.penalty !== 0) && (
                             <Box sx={{ mt: 1, maxHeight: 60, overflowY: 'auto' }}>
                                 {team.players.map((p, pIdx) => (
-                                    p.penalty !== 0 && (
+                                    p.penalty !== 0 && p.secs_till_unpenalised > 0 && (
                                         <Typography key={pIdx} variant="caption" display="block" color="error" sx={{ fontWeight: 'bold' }}>
                                             P{pIdx + 1}: {p.secs_till_unpenalised}s
                                         </Typography>

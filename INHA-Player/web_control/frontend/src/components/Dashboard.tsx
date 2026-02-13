@@ -8,6 +8,7 @@ import SSHConnectionDialog from './SSHConnectionDialog';
 import GameInfoBoard, { GameInfo } from './GameInfoBoard';
 import LogViewer from './LogViewer';
 import StateHistoryBoard, { StateLog } from './StateHistoryBoard';
+import GameLogBoard, { GameLog } from './GameLogBoard';
 
 // [대시보드 컴포넌트]
 // 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
@@ -50,6 +51,10 @@ const DashboardComp = () => {
     // 6. 전략 목록 및 각 로봇별 선택된 전략
     const [strategies, setStrategies] = useState<string[]>([]);
     const [selectedStrategies, setSelectedStrategies] = useState<{ [key: string]: string }>({});
+
+    const [gameLogs, setGameLogs] = useState<GameLog[]>([]);
+    const gameLogIdCounter = useRef(0);
+    const prevGameInfoRef = useRef<GameInfo | null>(defaultGameInfo);
 
     // 웹소켓 연결
     const WS_URL = 'ws://localhost:8000/ws/status';
@@ -109,7 +114,46 @@ const DashboardComp = () => {
                     });
                 }
 
-                if (data.game_info) setGameInfo(data.game_info);
+                if (data.game_info) {
+                    const newInfo = data.game_info as GameInfo;
+                    const prevInfo = prevGameInfoRef.current; // might be null initially
+
+                    if (prevInfo && prevInfo.teams && newInfo.teams) {
+                        const teamColors = ["BLUE", "RED"];
+
+                        newInfo.teams.forEach((newTeam, tIdx) => {
+                            const prevTeam = prevInfo.teams[tIdx];
+                            if (!prevTeam || !newTeam.players) return;
+
+                            newTeam.players.forEach((newPlayer, pIdx) => {
+                                const prevPlayer = prevTeam.players ? prevTeam.players[pIdx] : null;
+                                // Detect Penalty Change: Unpenalized -> Penalized
+                                if (prevPlayer && prevPlayer.penalty === 0 && newPlayer.penalty !== 0) {
+                                    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+                                    const penaltyMap: { [key: number]: string } = {
+                                        1: "Ball Holding", 2: "Player Pushing", 3: "Obstruction",
+                                        4: "Inactive", 5: "Illegal Defender", 6: "Leaving Field",
+                                        7: "Playing with Hands", 8: "Request for PickUp", 30: "Manual"
+                                    };
+                                    const reason = penaltyMap[newPlayer.penalty] || `Type ${newPlayer.penalty}`;
+
+                                    const newLog: GameLog = {
+                                        id: gameLogIdCounter.current++,
+                                        timestamp: now,
+                                        team: teamColors[tIdx],
+                                        playerNum: pIdx + 1,
+                                        eventType: "PENALTY",
+                                        description: `${reason} (${newPlayer.secs_till_unpenalised}s)`
+                                    };
+                                    setGameLogs(prev => [...prev.slice(-49), newLog]); // Keep last 50
+                                }
+                            });
+                        });
+                    }
+
+                    setGameInfo(newInfo);
+                    prevGameInfoRef.current = newInfo;
+                }
             } catch (e) {
                 console.error("WS Parse Error", e);
             }
@@ -197,9 +241,15 @@ const DashboardComp = () => {
                 </Box>
             </Box>
 
-            {/* 1. 게임 정보 보드 (GameController) */}
-            {/* 상단에 경기 시간, 점수, 상태(READY, PLAY 등)를 표시하는 컴포넌트 */}
-            {gameInfo && <GameInfoBoard info={gameInfo} />}
+            {/* 1. 게임 정보 보드 (GameController) & Log Board */}
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={8}>
+                    {gameInfo && <GameInfoBoard info={gameInfo} />}
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <GameLogBoard logs={gameLogs} />
+                </Grid>
+            </Grid>
 
             <Grid container spacing={3}>
                 {/* 2. 로봇 상태 카드 목록 (상단) */}
