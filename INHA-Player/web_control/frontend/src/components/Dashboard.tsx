@@ -9,6 +9,7 @@ import GameInfoBoard, { GameInfo } from './GameInfoBoard';
 import LogViewer from './LogViewer';
 import StateHistoryBoard, { StateLog } from './StateHistoryBoard';
 import GameLogBoard, { GameLog } from './GameLogBoard';
+import { PENALTY_MAP } from '../constants/PenaltyTypes';
 
 // [대시보드 컴포넌트]
 // 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
@@ -130,12 +131,7 @@ const DashboardComp = () => {
                                 // Detect Penalty Change: Unpenalized -> Penalized
                                 if (prevPlayer && prevPlayer.penalty === 0 && newPlayer.penalty !== 0) {
                                     const now = new Date().toLocaleTimeString('en-US', { hour12: false });
-                                    const penaltyMap: { [key: number]: string } = {
-                                        1: "Ball Holding", 2: "Player Pushing", 3: "Obstruction",
-                                        4: "Inactive", 5: "Illegal Defender", 6: "Leaving Field",
-                                        7: "Playing with Hands", 8: "Request for PickUp", 30: "Manual"
-                                    };
-                                    const reason = penaltyMap[newPlayer.penalty] || `Type ${newPlayer.penalty}`;
+                                    const reason = PENALTY_MAP[newPlayer.penalty] || `Unknown Penalty`;
 
                                     const newLog: GameLog = {
                                         id: gameLogIdCounter.current++,
@@ -143,7 +139,7 @@ const DashboardComp = () => {
                                         team: teamColors[tIdx],
                                         playerNum: pIdx + 1,
                                         eventType: "PENALTY",
-                                        description: `${reason} (${newPlayer.secs_till_unpenalised}s)`
+                                        description: `${reason} (Type ${newPlayer.penalty}, ${newPlayer.secs_till_unpenalised}s)`
                                     };
                                     setGameLogs(prev => [...prev.slice(-49), newLog]); // Keep last 50
                                 }

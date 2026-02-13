@@ -13,6 +13,7 @@ interface TeamInfo {
     color: number; // 0: Blue, 1: Red (usually)
     score: number;
     penaltyCount: number;
+    totalPenaltyCount?: number;
     messageBudget?: number; // Optional as it might be missing in older versions or initial state
     coachMessage?: string;
     players?: PlayerInfo[];
@@ -111,6 +112,13 @@ const GameInfoBoard = ({ info }: Props) => {
                                     )
                                 ))}
                             </Box>
+                        )}
+
+                        {/* Total Penalty Count Display */}
+                        {team.totalPenaltyCount !== undefined && (
+                            <Typography variant="body2" sx={{ mt: 1, color: '#d32f2f', fontWeight: 'bold' }}>
+                                Total Penalties: {team.totalPenaltyCount}
+                            </Typography>
                         )}
 
                         {/* Summary */}

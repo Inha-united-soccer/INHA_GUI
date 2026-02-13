@@ -38,12 +38,17 @@ class GCMonitor:
             "state": "UNKNOWN",
             "secsRemaining": 0,
             "teams": [
-                {"score": 0, "penaltyCount": 0},
-                {"score": 0, "penaltyCount": 0}
+                {"score": 0, "penaltyCount": 0, "totalPenaltyCount": 0},
+                {"score": 0, "penaltyCount": 0, "totalPenaltyCount": 0}
             ],
             "secondaryState": "NONE",
             "secondaryTime": 0
         }
+
+        # 누적 페널티 카운트 추적용 (재시작 시 초기화됨)
+        self.team_total_penalties = [0, 0]
+        # 이전 프레임의 선수별 페널티 상태 [팀0[20명], 팀1[20명]]
+        self.prev_players_penalty = [[0]*MAX_NUM_PLAYERS, [0]*MAX_NUM_PLAYERS]
 
         self.thread = threading.Thread(target=self.loop, daemon=True)
         self.thread.start()
@@ -141,20 +146,39 @@ class GCMonitor:
                 for p in range(20):
                     p_base = players_offset + (p * 2)
                     p_penalty, p_secs = struct.unpack("BB", data[p_base : p_base+2])
-                    if p_penalty != 0: penalty_count += 1
-                    players_info.append({
-                        "penalty": p_penalty, 
-                        "secs_till_unpenalised": p_secs,
-                        "yellow_cards": 0,
-                        "red_cards": 0,
-                        "is_goalie": False
-                    })
+                    
+                    # Only process valid players
+                    if p < players_per_team:
+                        if p_penalty != 0: penalty_count += 1
+                        
+                        # [Cumulative Penalty Logic]
+                        # Only increment for specific penalties that accumulate (30s, 45s, 60s...)
+                        # 1: Illegal Ball Contact, 2: Pushing, 6: Leaving Field, 7: PickUp, 10: Stance
+                        cumulative_codes = {1, 2, 6, 7, 10} 
+                        
+                        # If previously 0 (Unpenalized) and now in cumulative list, increment count
+                        if self.prev_players_penalty[i][p] == 0 and p_penalty in cumulative_codes:
+                            self.team_total_penalties[i] += 1
+                        
+                        # Update previous state
+                        self.prev_players_penalty[i][p] = p_penalty
+
+                        players_info.append({
+                            "penalty": p_penalty, 
+                            "secs_till_unpenalised": p_secs,
+                            "yellow_cards": 0,
+                            "red_cards": 0,
+                            "is_goalie": False
+                        })
+                    else:
+                        pass
 
                 parsed_teams.append({
                     "teamNumber": team_num,
                     "color": field_color,
                     "score": score,
                     "penaltyCount": penalty_count,
+                    "totalPenaltyCount": self.team_total_penalties[i],
                     "messageBudget": msg_budget,
                     "coachMessage": "", # SPL has no coach message field easily accessible here, or different format
                     "players": players_info
