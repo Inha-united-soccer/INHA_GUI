@@ -305,7 +305,8 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
         "PLAY",    // 정상 경기 진행
         "END"      // 경기 종료
     };
-    string gameState = gameStateMap[static_cast<int>(msg.state)]; // 현재 무슨 게임 상태인지 확인
+    int stateIdx = static_cast<int>(msg.state);
+    string gameState = (stateIdx >= 0 && stateIdx < (int)gameStateMap.size()) ? gameStateMap[stateIdx] : "UNKNOWN";
     // 영상에서는 Ready에 striker두기 위해 주석 처리
     // if (gameState != "PLAY") {
     //     data->hasScored = false;
@@ -360,7 +361,9 @@ void Brain::gameControlCallback(const game_controller_interface::msg::GameContro
     
     // STOP: 정지; -> GET_READY: 공격 또는 수비 위치로 이동; -> SET: 대기 자세
     vector<string> gameSubStateMap = {"STOP", "GET_READY", "SET"};
-    string gameSubState = gameSubStateMap[static_cast<int>(msg.secondary_state_info[1])];
+    int subStateIdx = static_cast<int>(static_cast<uint8_t>(msg.secondary_state_info[1]));
+    string gameSubState = (subStateIdx >= 0 && subStateIdx < (int)gameSubStateMap.size()) ? gameSubStateMap[subStateIdx] : "STOP";
+    
     tree->setEntry<string>("gc_game_sub_state_type", gameSubStateType); // 현재 어떤 프리킥 상황인지
     tree->setEntry<string>("gc_game_sub_state", gameSubState); // 정지, 공격 또는 수비 위치로 이동, 대기 자세인지 확인
 
