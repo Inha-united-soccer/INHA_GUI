@@ -18,7 +18,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 | **Dashboard View** |
 | :---: |
-| <img src="https://github.com/user-attachments/assets/13146327-1a4f-477f-87f8-834c51ba048d" width="100%"> <br> **Main Dashboard & Robot Status Cards** |
+| <img width="100%" alt="dashboard" src="https://github.com/user-attachments/assets/3fe89b25-003c-45a5-a244-840fd36cdc4b" /> <br> **Main Dashboard & Robot Status Cards** |
 
 <br>
 
