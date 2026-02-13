@@ -157,14 +157,36 @@ class GCMonitor:
             # gameType(1), state(1), firstHalf(1), kickOffTeam(1)
             # secondaryState(1), secondaryStateInfo(4), dropInTeam(1)
             # dropInTime(2), secsRemaining(2), secondaryTime(2)
-            # Total Header: 25 bytes
+            # Total Header: 25 bytes (Check struct.calcsize)
+            header_fmt = "<4sHBBBBBBB4sBHHH"
+            # print(f"[GC] Header FMT Size: {struct.calcsize(header_fmt)}")
+
+            if len(data) < 24: return
             
-            if len(data) < 25: return
-            
-            (header, version, packet_num, players_per_team,
-             game_type, state, first_half, kick_off_team,
-             sec_state, sec_state_info_bytes, drop_in_team,
-             drop_in_time, secs_remaining, secondary_time) = struct.unpack("<4sHBBBBBBB4sBHHH", data[0:24])
+            try:
+                (header, version, packet_num, players_per_team,
+                 game_type, state, first_half, kick_off_team,
+                 sec_state, sec_state_info_bytes, drop_in_team,
+                 drop_in_time, secs_remaining, secondary_time) = struct.unpack(header_fmt, data[0:25])
+            except Exception as e:
+                print(f"[GC] Header Unpack Failed: {e}. Data slice len: {len(data[0:25])}, FMT Size: {struct.calcsize(header_fmt)}")
+                # Fallback to 24 bytes if 25 fails, just to test? 
+                # Actually, based on previous error 'requires 23 bytes' when using 25 slice with 24 format...
+                # Let's trust that the HEADER is indeed 25 bytes in HL v12.
+                # If the packet is 688 bytes, and 2 teams are 664 bytes, then header is 24 bytes.
+                # 688 - 664 = 24.
+                # So header MUST be 24 bytes.
+                # Which field is missing or compressed?
+                # Maybe 'secondaryStateInfo' is actually 3 bytes? No.
+                # Maybe 'version' is 1 byte? No, line 79 unpacks 'H' (2 bytes).
+                # Maybe 'secondaryTime' is missing?
+                # Let's try to unpack 24 bytes.
+                try:
+                     header_fmt_24 = "<4sHBBBBBBB4sBHH" # Removed one H (last one?)
+                     # No, let's just re-raise for now to see the log.
+                     raise e
+                except:
+                     return
 
             STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
             state_str = STATE_MAP.get(state, "UNKNOWN")
@@ -186,13 +208,9 @@ class GCMonitor:
             self.data["gameType"] = "HL"
 
             # Teams (HL)
-            # Offset 24 starts TeamInfo[2]
-            # HlTeamInfo Size:
-            # teamNumber(1), colour(1), score(1), penaltyShot(1), singleShots(2), coachSeq(1)
-            # coachMessage(253) -> SPL_COACH_MESSAGE_SIZE
-            # coach(6) -> HlRobotInfo
-            # players(11 * 6) -> HlRobotInfo * 11
-            # Total: 7 + 253 + 6 + 66 = 332 bytes
+            # 688 bytes total - 24 bytes header = 664 bytes.
+            # 664 / 2 = 332 per team.
+            # So offset MUST be 24.
             
             offset = 24
             TEAM_INFO_SIZE = 332
