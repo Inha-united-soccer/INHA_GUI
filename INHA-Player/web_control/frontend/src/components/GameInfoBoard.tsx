@@ -48,7 +48,7 @@ const GameInfoBoard = ({ info }: Props) => {
     const teamNames = ['BLUE', 'RED'];
 
     return (
-        <Paper sx={{ p: 2, mb: 2, bgcolor: '#f5f5f5' }}>
+        <Paper sx={{ p: 2, height: '100%', bgcolor: '#f5f5f5', overflowY: 'auto' }}>
             <Grid container alignItems="center" spacing={2}>
                 {/* [경기 시간 및 상태] */}
                 {/* 남은 시간(분:초)과 현재 게임 단계(READY, PLAYING 등)를 가운데 정렬로 표시 */}

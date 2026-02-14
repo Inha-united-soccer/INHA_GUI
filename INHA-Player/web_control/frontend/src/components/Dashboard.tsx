@@ -238,7 +238,7 @@ const DashboardComp = () => {
             </Box>
 
             {/* 1. 게임 정보 보드 (GameController) & Log Board */}
-            <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid container spacing={3} sx={{ mb: 6, height: { xs: 'auto', md: '180px' } }}>
                 <Grid item xs={12} md={8}>
                     {gameInfo && <GameInfoBoard info={gameInfo} />}
                 </Grid>

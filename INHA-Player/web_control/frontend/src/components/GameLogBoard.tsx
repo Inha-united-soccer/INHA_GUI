@@ -34,7 +34,6 @@ const GameLogBoard = ({ logs }: Props) => {
                 sx={{
                     flexGrow: 1,
                     overflowY: 'auto',
-                    maxHeight: 300,
                     bgcolor: '#fafafa',
                     border: '1px solid #eee',
                     borderRadius: 1,
@@ -81,7 +80,7 @@ const GameLogBoard = ({ logs }: Props) => {
                     </List>
                 )}
             </Box>
-        </Paper>
+        </Paper >
     );
 };
 
