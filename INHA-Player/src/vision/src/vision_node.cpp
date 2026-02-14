@@ -206,8 +206,8 @@ void VisionNode::Init(const std::string &cfg_template_path, const std::string &c
         color_topic = "/zed/zed_node/left/image_rect_color";
         depth_topic = "/zed/zed_node/depth/depth_registered";
     } else if (camera_type_ == "d-robotics") {
-        color_topic = "/booster_camera_bridge/StereoNetNode/rectified_image";
-        depth_topic = "/booster_camera_bridge/StereoNetNode/stereonet_depth";
+        color_topic = "/StereoNetNode/rectified_image";
+        depth_topic = "/StereoNetNode/stereonet_depth";
     } else if (camera_type_ == "orbbec") {
         color_topic = "/camera/color/image_raw";
         depth_topic = "/camera/depth/image_raw";
