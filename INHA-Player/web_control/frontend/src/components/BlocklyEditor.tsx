@@ -159,7 +159,7 @@ export default function BlocklyEditor() {
             </Box>
 
             {/* Blockly가 주입될 Div */}
-            <div ref={blocklyDiv} style={{ flexGrow: 1, border: '1px solid #ccc' }} />
+            <div ref={blocklyDiv} style={{ height: '600px', width: '100%', border: '1px solid #ccc' }} />
 
             <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
                 <Alert severity={snackbar.severity}>{snackbar.msg}</Alert>
