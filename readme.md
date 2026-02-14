@@ -18,7 +18,7 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 | **Dashboard View** |
 | :---: |
-| <img width="100%" alt="dashboard" src="https://github.com/user-attachments/assets/3fe89b25-003c-45a5-a244-840fd36cdc4b" /> <br> **Main Dashboard & Robot Status Cards** |
+| <img width="100%" alt="INHA-dashboard" src="https://github.com/user-attachments/assets/ccdb34e9-515b-4e12-ba37-b9a70cc5c623" /> <br> **Main Dashboard & Robot Status Cards** |
 
 <br>
 
