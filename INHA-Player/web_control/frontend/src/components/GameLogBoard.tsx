@@ -50,26 +50,27 @@ const GameLogBoard = ({ logs }: Props) => {
                                 <ListItemText
                                     primary={
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Typography variant="caption" sx={{ color: '#666', minWidth: 45 }}>
-                                                [{log.timestamp}]
-                                            </Typography>
                                             <Chip
                                                 label={log.team}
                                                 size="small"
                                                 sx={{
                                                     height: 20,
                                                     fontSize: '0.7rem',
+                                                    width: 50, // 고정 너비로 정렬 맞춤
                                                     bgcolor: log.team === 'BLUE' ? '#e3f2fd' : '#ffebee',
                                                     color: log.team === 'BLUE' ? '#1e88e5' : '#e53935'
                                                 }}
                                             />
-                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                            <Typography variant="body2" sx={{ fontWeight: 'bold', width: 25 }}>
                                                 P{log.playerNum}
+                                            </Typography>
+                                            <Typography variant="caption" sx={{ color: '#666' }}>
+                                                [{log.timestamp}]
                                             </Typography>
                                         </Box>
                                     }
                                     secondary={
-                                        <Typography variant="body2" color="textPrimary" sx={{ ml: 8 }}>
+                                        <Typography variant="body2" color="textPrimary" sx={{ ml: 0.5 }}>
                                             {log.description}
                                         </Typography>
                                     }

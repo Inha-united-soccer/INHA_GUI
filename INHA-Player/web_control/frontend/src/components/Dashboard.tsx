@@ -128,16 +128,19 @@ const DashboardComp = () => {
                                 const prevPlayer = prevTeam.players ? prevTeam.players[pIdx] : null;
 
                                 if (prevPlayer && prevPlayer.penalty === 0 && newPlayer.penalty !== 0) {
-                                    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+                                    const minutes = Math.floor(newInfo.secsRemaining / 60);
+                                    const seconds = newInfo.secsRemaining % 60;
+                                    const gameTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
                                     const reason = PENALTY_MAP[newPlayer.penalty] || `Unknown Penalty`;
 
                                     const newLog: GameLog = {
                                         id: gameLogIdCounter.current++,
-                                        timestamp: now,
+                                        timestamp: gameTime,
                                         team: teamColors[tIdx],
                                         playerNum: pIdx + 1,
                                         eventType: "PENALTY",
-                                        description: `${reason} (Type ${newPlayer.penalty}, ${newPlayer.secs_till_unpenalised}s)`
+                                        description: `${reason} (${newPlayer.secs_till_unpenalised}s)`
                                     };
                                     setGameLogs(prev => [...prev.slice(-49), newLog]); // Keep last 50
                                 }
@@ -237,10 +240,10 @@ const DashboardComp = () => {
 
             {/* 1. 게임 정보 보드 & 이벤트 로그 */}
             <Grid container spacing={3} sx={{ mb: 6, height: { xs: 'auto', md: '200px' } }}>
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} md={8} sx={{ height: '100%' }}>
                     {gameInfo && <GameInfoBoard info={gameInfo} />}
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <GameLogBoard logs={gameLogs} />
                 </Grid>
             </Grid>

@@ -119,6 +119,14 @@ class GCMonitor:
                             3: "CORNER_KICK", 4: "KICK_IN", 5: "PENALTY_KICK"}
             set_play_str = SET_PLAY_MAP.get(set_play, "NONE")
 
+            # State Reset Logic
+            if state_str == "INITIAL":
+                # 게임이 INITIAL 상태로 돌아가면 카운터 초기화
+                if self.data["state"] != "INITIAL": # 상태가 변경된 순간에만 로그 출력
+                     print("[GC] State changed to INITIAL. Resetting Team Penalty Counts.")
+                     self.team_total_penalties = [0, 0]
+                     self.prev_players_penalty = [[0]*MAX_NUM_PLAYERS, [0]*MAX_NUM_PLAYERS]
+
             self.data["state"] = state_str
             self.data["secsRemaining"] = secs_remaining
             self.data["secondaryState"] = set_play_str
@@ -152,12 +160,19 @@ class GCMonitor:
                         
                         # [누적 페널티 로직]
                         # 누적되어야 하는 특정 페널티만 카운트 (30s, 45s, 60s...)
-                        # 1: Illegal Ball Contact, 2: Pushing, 6: Leaving Field, 7: PickUp, 10: Stance
-                        cumulative_codes = {1, 2, 6, 7, 10} 
+                        # 1: Illegal Ball Contact, 2: Pushing, 6: Leaving Field, 10: Stance
+                        # 7(PickUp)은 규칙서상 누적이지만, 사용자가 Incapable과 혼용할 수 있어 제외함
+                        # 3(Motion), 4(Incapable), 5(Illegal Position), 8(Local Stuck)은 규칙서상 누적 안됨
+                        cumulative_codes = {1, 2, 6, 10} 
                         
-                        # 이전에 페널티가 없었다가(0) 이번에 누적 대상 페널티에 해당하면 카운트 증가
-                        if self.prev_players_penalty[i][p] == 0 and p_penalty in cumulative_codes:
-                            self.team_total_penalties[i] += 1
+                        # 이전에 페널티가 없었다가(0) 이번에 새로운 페널티 발생
+                        if self.prev_players_penalty[i][p] == 0 and p_penalty != 0:
+                            is_cumulative = p_penalty in cumulative_codes
+                            print(f"[GC] New Penalty: Team {i}, Player {p+1}, Code {p_penalty}, Cumulative: {is_cumulative}")
+                            
+                            if is_cumulative:
+                                self.team_total_penalties[i] += 1
+                                print(f"[GC] -> Total Penalties Increment to {self.team_total_penalties[i]}")
                         
                         # 이전 상태 업데이트
                         self.prev_players_penalty[i][p] = p_penalty
