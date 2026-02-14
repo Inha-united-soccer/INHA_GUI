@@ -10,11 +10,11 @@ interface PlayerInfo {
 
 interface TeamInfo {
     teamNumber: number;
-    color: number; // 0: Blue, 1: Red (usually)
+    color: number; // 0: Blue, 1: Red
     score: number;
     penaltyCount: number;
     totalPenaltyCount?: number;
-    messageBudget?: number; // Optional as it might be missing in older versions or initial state
+    messageBudget?: number;
     coachMessage?: string;
     players?: PlayerInfo[];
 }
@@ -37,7 +37,6 @@ interface Props {
 const GameInfoBoard = ({ info }: Props) => {
     if (!info) return null;
 
-    // Helper to format time (mm:ss)
     const formatTime = (secs: number) => {
         const m = Math.floor(secs / 60);
         const s = secs % 60;
@@ -57,7 +56,7 @@ const GameInfoBoard = ({ info }: Props) => {
                         {formatTime(info.secsRemaining)}
                     </Typography>
 
-                    {/* Secondary Timer (e.g. Free Kick Timeout, Ready Timer) */}
+                    {/* Secondary Timer */}
                     {(info.secondaryTime > 0 || info.secondaryState !== 'NONE') && (
                         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                             <Chip
@@ -76,7 +75,7 @@ const GameInfoBoard = ({ info }: Props) => {
 
                     <Box sx={{ mt: 1 }}>
                         <Chip
-                            label={info.state} // 예: PLAYING
+                            label={info.state}
                             color={info.state === 'PLAYING' ? 'success' : (info.state === 'READY' ? 'warning' : 'default')}
                             sx={{ fontWeight: 'bold' }}
                         />
@@ -90,7 +89,7 @@ const GameInfoBoard = ({ info }: Props) => {
                     </Box>
                 </Grid>
 
-                {/* [스코어보드] */}
+                {/* 스코어보드 */}
                 {/* BLUE팀과 RED팀의 점수를 나란히 표시 */}
                 {info.teams && info.teams.map((team, idx) => (
                     <Grid item xs={4} key={idx} sx={{ textAlign: 'center', borderLeft: idx === 1 ? '1px solid #ddd' : 'none' }}>
@@ -101,7 +100,7 @@ const GameInfoBoard = ({ info }: Props) => {
                             {team.score}
                         </Typography>
 
-                        {/* Penalty Info Breakdown */}
+                        {/* 페널티 정보 */}
                         {team.players && team.players.some(p => p.penalty !== 0) && (
                             <Box sx={{ mt: 1, maxHeight: 60, overflowY: 'auto' }}>
                                 {team.players.map((p, pIdx) => (
@@ -114,7 +113,7 @@ const GameInfoBoard = ({ info }: Props) => {
                             </Box>
                         )}
 
-                        {/* Total Penalty Count Display */}
+                        {/* 페널티 총 횟수 */}
                         {team.totalPenaltyCount !== undefined && (
                             <Typography variant="body2" sx={{ mt: 1, color: '#d32f2f', fontWeight: 'bold' }}>
                                 Total Penalties: {team.totalPenaltyCount}
@@ -134,7 +133,7 @@ const GameInfoBoard = ({ info }: Props) => {
                             </Typography>
                         )}
 
-                        {/* Coach Message */}
+                        {/* Coach Message - 삭제 */}
                         {team.coachMessage && (
                             <Typography variant="caption" display="block" sx={{ mt: 0.5, fontStyle: 'italic', color: '#666', border: '1px dashed #ccc', borderRadius: 1, p: 0.5 }}>
                                 Coach: "{team.coachMessage}"

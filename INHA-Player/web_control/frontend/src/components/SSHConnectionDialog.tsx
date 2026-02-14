@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, CircularProgress } from '@mui/material';
 import axios from 'axios';
 
-// [SSH 연결 다이얼로그 프로퍼티]
+// SSH 연결 다이얼로그 프로퍼티
 interface SSHConnectionDialogProps {
     open: boolean;              // 다이얼로그 열림 여부
     onClose: () => void;        // 닫기 핸들러
@@ -10,8 +10,7 @@ interface SSHConnectionDialogProps {
     initialRobotId?: string;    // 초기 로봇 ID (선택 사항)
 }
 
-// [SSH 연결 다이얼로그 컴포넌트]
-// 사용자가 로봇의 IP, 계정, 비밀번호를 입력하여 SSH 연결을 요청하는 팝업 창입니다.
+// SSH 연결 다이얼로그 컴포넌트 -> 사용자가 로봇의 IP, 계정, 비밀번호를 입력하여 SSH 연결을 요청하는 팝업 창
 const SSHConnectionDialog = ({ open, onClose, onConnected, initialRobotId }: SSHConnectionDialogProps) => {
     // 입력 필드 상태 관리
     const [id, setId] = useState(initialRobotId || 'robot_1');
@@ -27,8 +26,7 @@ const SSHConnectionDialog = ({ open, onClose, onConnected, initialRobotId }: SSH
         }
     }, [initialRobotId]);
 
-    // [연결 요청 핸들러]
-    // Connect 버튼 클릭 시 백엔드(/api/connect)로 연결 요청 보냄
+    // 연결 요청 핸들러 -> Connect 버튼 클릭 시 백엔드(/api/connect)로 연결 요청 보냄
     const handleConnect = async () => {
         setLoading(true);
         try {
@@ -97,7 +95,7 @@ const SSHConnectionDialog = ({ open, onClose, onConnected, initialRobotId }: SSH
                 {/* 취소 버튼 */}
                 <Button onClick={onClose} disabled={loading}>Cancel</Button>
 
-                {/* 연결 버튼 (로딩 중에는 스피너 표시) */}
+                {/* 연결 버튼, 로딩 중에는 스피너 표시 */}
                 <Button onClick={handleConnect} disabled={loading} variant="contained">
                     {loading ? <CircularProgress size={24} /> : "Connect"}
                 </Button>

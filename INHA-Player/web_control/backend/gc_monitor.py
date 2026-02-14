@@ -3,11 +3,11 @@ import struct
 import threading
 import time
 
-# Constants
+# 상수 선언
 GAMECONTROLLER_DATA_PORT = 3838
 # RoboCupGameControlData.h defines version 15
 GAMECONTROLLER_STRUCT_VERSION = 15
-MAX_NUM_PLAYERS = 20 # RoboCupGameControlData.h line 13
+MAX_NUM_PLAYERS = 20
 
 # -----------------------------------------------------------------------------------------
 # [GameController 모니터]
@@ -70,9 +70,9 @@ class GCMonitor:
                 time.sleep(1)
 
     def parse_packet(self, data):
-        print(f"[GC] Received {len(data)} bytes") # Verbose debug
+        print(f"[GC] Received {len(data)} bytes")
         try:
-            # Check Header 'RGme'
+            # 헤더 확인 'RGme'
             if len(data) < 4: 
                 print("[GC] Data too short")
                 return
@@ -82,16 +82,16 @@ class GCMonitor:
 
             print(f"[GC] Header OK. Version Byte: {data[4]}")
 
-            # Read Version
+            # 버전 확인
             if len(data) < 6: return
             
-            # SPL v15 or v18 (byte 4)
-            if data[4] == 15 or data[4] == 18: 
+            # SPL v15 확인
+            if data[4] == 15: 
                 print(f"[GC] Detected SPL v{data[4]} Packet")
                 self.parse_spl_packet(data)
                 return
 
-            # HL v12 (uint16 little endian)
+            # HL v12
             version = struct.unpack("<H", data[4:6])[0]
             
             # If version is 12, it is Humanoid League
@@ -104,8 +104,7 @@ class GCMonitor:
         except Exception as e:
             print(f"[GC] Parse error: {e}")
 
-    def parse_spl_packet(self, data):
-        # Existing SPL v15 parsing logic...
+    def parse_spl_packet(self, data): # 파싱 로직
         try:
             if len(data) < 18: return
             (header, version, packet_num, players_per_team, 
@@ -125,13 +124,13 @@ class GCMonitor:
             self.data["secondaryState"] = set_play_str
             self.data["secondaryTime"] = secondary_time
             self.data["gameType"] = "SPL"
-            # Fill missing HL fields with safe defaults to prevent Frontend errors
+            # 프론트엔드 오류 방지를 위해 HL 관련 필드는 기본값으로 채움
             self.data["dropInTime"] = 0
             self.data["dropInTeam"] = 0
             
-            # Teams (SPL)
+            # SPL 팀 데이터 파싱
             offset = 18
-            TEAM_INFO_SIZE = 10 + (20 * 2) # 50
+            TEAM_INFO_SIZE = 10 + (20 * 2) # 50 바이트
             parsed_teams = []
             
             for i in range(2):
@@ -147,20 +146,20 @@ class GCMonitor:
                     p_base = players_offset + (p * 2)
                     p_penalty, p_secs = struct.unpack("BB", data[p_base : p_base+2])
                     
-                    # Only process valid players
+                    # 유효한 선수만 처리
                     if p < players_per_team:
                         if p_penalty != 0: penalty_count += 1
                         
-                        # [Cumulative Penalty Logic]
-                        # Only increment for specific penalties that accumulate (30s, 45s, 60s...)
+                        # [누적 페널티 로직]
+                        # 누적되어야 하는 특정 페널티만 카운트 (30s, 45s, 60s...)
                         # 1: Illegal Ball Contact, 2: Pushing, 6: Leaving Field, 7: PickUp, 10: Stance
                         cumulative_codes = {1, 2, 6, 7, 10} 
                         
-                        # If previously 0 (Unpenalized) and now in cumulative list, increment count
+                        # 이전에 페널티가 없었다가(0) 이번에 누적 대상 페널티에 해당하면 카운트 증가
                         if self.prev_players_penalty[i][p] == 0 and p_penalty in cumulative_codes:
                             self.team_total_penalties[i] += 1
                         
-                        # Update previous state
+                        # 이전 상태 업데이트
                         self.prev_players_penalty[i][p] = p_penalty
 
                         players_info.append({
@@ -193,19 +192,12 @@ class GCMonitor:
 
     def parse_hl_packet(self, data):
         try:
-            # HlRoboCupGameControlData (v12) Structure
-            # header(4), version(2), packetNumber(1), playersPerTeam(1)
-            # gameType(1), state(1), firstHalf(1), kickOffTeam(1)
-            # secondaryState(1), secondaryStateInfo(4), dropInTeam(1)
-            # dropInTime(2), secsRemaining(2), secondaryTime(2)
-            # Total Header: 25 bytes (Check struct.calcsize)
-            # Total Header: 24 bytes (HL v12)
             if len(data) < 24: return
             
             (header, version, packet_num, players_per_team,
              game_type, state, first_half, kick_off_team,
              sec_state, sec_state_info_bytes, drop_in_team,
-             drop_in_time, secs_remaining, secondary_time) = struct.unpack("<4sHBBBBBBB4sBHHH", data[0:24])
+             drop_in_time, secs_remaining, secondary_time) = struct.unpack("<4sHBBBBBBB4sBHHH", data[0:24]) # 들어온 바이너리 데이터를 리그 규격으로 잘라서 숫자나 문자로 변환
 
             STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
             state_str = STATE_MAP.get(state, "UNKNOWN")
@@ -245,8 +237,9 @@ class GCMonitor:
                     coach_msg = coach_msg_bytes.decode('utf-8').rstrip('\x00')
                 except:
                     coach_msg = ""
-                
-                # Players: Offset + 7 + 253 + 6 (Coach Info ignored for now)
+                    
+                # 팀 시작 위치에서 266바이트(7+253+6)를 건너뛰면, 거기서부터 선수들 정보가 나온다
+                # Players: Offset + 7 + 253 + 6
                 # Players start at Offset + 266
                 players_offset = offset + 266
                 penalty_count = 0

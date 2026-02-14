@@ -32,7 +32,7 @@ class ROSBridge(Node):
         else:
             print("[WARN] ROS 2 not detected. Running in Idle Mode.")
 
-    # ROS 2 이벤트 루프 실행 (비동기)
+    # ROS 2 이벤트 루프 실행
     def spin_ros(self):
         if ROS_AVAILABLE:
             rclpy.spin(self)
@@ -46,7 +46,7 @@ class ROSBridge(Node):
         if ROS_AVAILABLE:
             topic = f"/{robot_id}/strategy/deploy"
             
-            # 퍼블리셔가 없으면 생성 (지연 생성 패턴)
+            # 퍼블리셔가 없으면 생성
             if not hasattr(self, 'strat_pubs'):
                 self.strat_pubs = {}
             

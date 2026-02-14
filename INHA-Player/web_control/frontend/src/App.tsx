@@ -3,8 +3,7 @@ import { AppBar, Toolbar, Typography, Container, Box, Tabs, Tab } from '@mui/mat
 import Dashboard from './components/Dashboard';
 import BlocklyEditor from './components/BlocklyEditor';
 
-// [메인 애플리케이션 컴포넌트]
-// 전체적인 레이아웃(헤더, 탭)을 잡고, 선택된 탭에 따라 하위 컴포넌트를 렌더링
+// 메인 애플리케이션 컴포넌트 -> 전체적인 레이아웃(헤더, 탭)을 잡고, 선택된 탭에 따라 하위 컴포넌트를 렌더링
 function App() {
     const [tabIndex, setTabIndex] = useState(0);
 

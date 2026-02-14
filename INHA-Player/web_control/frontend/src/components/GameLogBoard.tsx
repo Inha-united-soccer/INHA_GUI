@@ -4,10 +4,10 @@ import { Paper, Typography, Box, List, ListItem, ListItemText, Chip } from '@mui
 export interface GameLog {
     id: number;
     timestamp: string;
-    team: string; // "BLUE" or "RED"
+    team: string;
     playerNum: number;
-    eventType: string; // "PENALTY", "GOAL", etc.
-    description: string; // "Pushing (30s)", "Goal Scored"
+    eventType: string;
+    description: string;
 }
 
 interface Props {
@@ -17,7 +17,6 @@ interface Props {
 const GameLogBoard = ({ logs }: Props) => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to bottom directly
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

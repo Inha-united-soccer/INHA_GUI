@@ -5,7 +5,7 @@ import axios from 'axios';
 interface Props {
     open: boolean;
     onClose: () => void;
-    robots: string[]; // List of connected robot IDs
+    robots: string[];
 }
 
 const LogViewer = ({ open, onClose, robots }: Props) => {
@@ -18,8 +18,7 @@ const LogViewer = ({ open, onClose, robots }: Props) => {
         }
     }, [robots, open]);
 
-    // [로그 새로고침 함수]
-    // 백엔드의 GET /api/logs/{id} API를 호출하여 최신 로그 데이터를 가져옴
+    // 로그 새로고침 함수 -> 백엔드의 GET /api/logs/{id} API를 호출하여 최신 로그 데이터를 가져옴
     const fetchLogs = async () => {
         if (!selectedRobot) return;
         try {

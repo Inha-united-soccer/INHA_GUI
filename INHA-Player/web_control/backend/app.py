@@ -58,15 +58,15 @@ except Exception as e:
 
 # 로봇 연결 설정 -> 프론트엔드에서 보낸 JSON 데이터를 파싱하기 위한 Pydantic 모델
 class RobotConfig(BaseModel):
-    id: str       # 로봇 식별자 (예: robot_1)
-    ip: str       # 로봇의 IP 주소 (예: 192.168.0.10)
-    username: str # SSH 접속 계정명 (예: booster)
+    id: str       # 로봇 식별자 
+    ip: str       # 로봇의 IP 주소 
+    username: str # SSH 접속 계정명
     password: str # SSH 접속 비밀번호
 
 # 쉘 명령어 실행 요청
 class Command(BaseModel):
     robot_id: str # 명령을 수행할 로봇 ID
-    cmd: str      # 실행할 리눅스 쉘 명령어 (예: sudo reboot)
+    cmd: str      # 실행할 리눅스 쉘 명령어
 
 # 프론트엔드에서 입력한 IP와 비번으로 로봇에 SSH 원격 접속을 시도함 -> 사용자가 'Connect' 버튼을 눌렀을 때 호출된다
 @app.post("/api/connect")
@@ -82,12 +82,11 @@ def connect_robot(config: RobotConfig):
 def send_command(command: Command):
     print(f"[API] Command request: {command.cmd} -> {command.robot_id}")
     
-    # [Log Modification] User requested brain.log at root // 로그 출력 파일 생성
+    # 로그 출력 파일 생성
     if "brain_nohup.log" in command.cmd:
         command.cmd = command.cmd.replace("brain_nohup.log", "/home/booster/Workspace/GUI/INHA-Player/launcher.log")
         command.cmd = command.cmd.replace("Workspace/Soccer", "Workspace/GUI/INHA-Player")
         
-        # [Fix] Force source install/setup.bash to ensure local packages are found
         if "source /opt/ros" in command.cmd:
             command.cmd = command.cmd.replace("; nohup", "; source ./install/setup.bash; nohup")
             
@@ -99,7 +98,7 @@ def send_command(command: Command):
 
 # 전략 배포 요청
 class StrategyDeploy(BaseModel):
-    robot_id: str = "all" # 특정 로봇 ID 또는 "all"(전체)
+    robot_id: str = "all" # 특정 로봇 ID 또는 전체 로봇
     strategy_xml: str     # 배포할 Behavior Tree XML 내용
 
 # 전략 배포 (Hot-Swap) -> 토글의 전략(XML)을 로봇에게 전송하여 즉시 적용시킨다 -> 로봇 내부에서 'ros2 topic pub' 명령을 실행하는 방식으로 동작한다
@@ -112,7 +111,7 @@ def deploy_strategy_endpoint(data: StrategyDeploy):
     # 2. 현재 SSH로 연결된 로봇 목록 확인
     connected_robots = list(ssh_manager.clients.keys())
     
-    # 연결된 로봇이 없으면 경고 출력 (시뮬레이션 로그)
+    # 연결된 로봇이 없으면 경고 출력
     if not connected_robots:
          print("[WARN] No robot connected via SSH. Deployment skipped (Simulation).")
          if ros_bridge_node:
@@ -152,7 +151,7 @@ async def list_strategies():
 
 # 전략 저장 요청
 class StrategySave(BaseModel):
-    name: str # 파일명 (확장자 제외 가능)
+    name: str # 파일명
     xml: str  # 파일 내용
 
 # 전략 저장
@@ -240,4 +239,4 @@ if __name__ == "__main__":
     # uvicorn 서버 실행 (호스트 0.0.0.0은 외부 접속 허용을 의미)
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-# 데이터 모델 : 프론트엔드와의 데이터 통신을 위한 모델, API : 버튼을 누르는 등의 일회성 동작, 웹소켓 : 실시간 데이터 통신
+# 정리 ) 데이터 모델 : 프론트엔드와의 데이터 통신을 위한 모델, API : 버튼을 누르는 등의 일회성 동작, 웹소켓 : 실시간 데이터 통신

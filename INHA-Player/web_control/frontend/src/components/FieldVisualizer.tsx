@@ -7,16 +7,16 @@ const FIELD_HEIGHT = 600; // 캔버스 세로 크기 (픽셀)
 const REAL_WIDTH = 14.0;  // 실제 경기장 가로 크기 (미터)
 const REAL_HEIGHT = 9.0;  // 실제 경기장 세로 크기 (미터)
 
-// [컴포넌트 프로퍼티]
+// 컴포넌트 프로퍼티
 interface FieldVisualizerProps {
     robots: { [key: string]: any }; // 로봇 상태 데이터 객체 (위치, 역할, 공 정보 등)
 }
 
-// [경기장 시각화 컴포넌트]
+// 경기장 시각화 컴포넌트
 const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // [렌더링 루프]
+    // 렌더링 루프
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -26,14 +26,14 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
         // 1. 경기장 배경 및 라인 그리기
         drawField(ctx);
 
-        // 2. 각 로봇 그리기 (위치 및 방향)
+        // 2. 각 로봇 그리기
         Object.entries(robots).forEach(([id, data]: [string, any]) => {
             if (data.x !== undefined && data.y !== undefined) {
                 drawRobot(ctx, id, data.x, data.y, data.role);
             }
         });
 
-        // 3. [공 그리기] - 가장 신뢰도가 높은 공 하나만 표시
+        // 3. 공 그리기 - 가장 신뢰도가 높은 공 하나만 표시
         let bestBall: { x: number, y: number, conf: number, robotId: string } | null = null;
 
         Object.entries(robots).forEach(([id, data]: [string, any]) => {
@@ -52,14 +52,14 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
 
     }, [robots]);
 
-    // [좌표 변환 함수]
+    // 좌표 변환 함수
     const toCanvasCoords = (x: number, y: number) => {
         const cx = (x + REAL_WIDTH / 2) / REAL_WIDTH * FIELD_WIDTH;
         const cy = ((-y) + REAL_HEIGHT / 2) / REAL_HEIGHT * FIELD_HEIGHT;
         return { cx, cy };
     };
 
-    // [경기장 그리기]
+    // 경기장 그리기
     const drawField = (ctx: CanvasRenderingContext2D) => {
         ctx.fillStyle = '#4CAF50';
         ctx.fillRect(0, 0, FIELD_WIDTH, FIELD_HEIGHT);
@@ -78,7 +78,7 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
         ctx.stroke();
     };
 
-    // [로봇 그리기]
+    // 로봇 그리기
     const drawRobot = (ctx: CanvasRenderingContext2D, id: string, x: number, y: number, role: string) => {
         const { cx, cy } = toCanvasCoords(x, y);
 
@@ -100,7 +100,7 @@ const FieldVisualizer = ({ robots }: FieldVisualizerProps) => {
         ctx.fillText(role || '?', cx - 15, cy + 30);
     };
 
-    // [공 그리기 함수]
+    // 공 그리기 함수
     const drawBall = (ctx: CanvasRenderingContext2D, ball: { x: number, y: number, conf: number, robotId: string }) => {
         const { cx, cy } = toCanvasCoords(ball.x, ball.y);
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Paper, Typography, Button, Box, TextField, FormControl, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 
-// [컴포넌트 프로퍼티]
+// 컴포넌트 프로퍼티
 interface CommandPanelProps {
     robotId: string; // 제어할 단일 로봇 ID
     strategies: string[];
@@ -10,13 +10,12 @@ interface CommandPanelProps {
     onStrategyChange: (robotId: string, strategy: string) => void;
 }
 
-// [SSH 명령 제어 패널]
-// 특정 로봇에 대해 쉘 명령을 내리고 터미널 출력을 확인하는 컴포넌트
+// SSH 명령 제어 패널 -> 특정 로봇에 대해 쉘 명령을 내리고 터미널 출력을 확인하는 컴포넌트
 const CommandPanel = ({ robotId, strategies, selectedStrategy, onStrategyChange }: CommandPanelProps) => {
     const [customCmd, setCustomCmd] = useState('');
     const [logs, setLogs] = useState<string[]>([]);
 
-    // 로봇 ID가 바뀌면 로그 초기화 (선택사항)
+    // 로봇 ID가 바뀌면 로그 초기화
     useEffect(() => {
         setLogs([]);
     }, [robotId]);
@@ -65,7 +64,7 @@ const CommandPanel = ({ robotId, strategies, selectedStrategy, onStrategyChange 
                 Control Panel ({robotId})
             </Typography>
 
-            {/* Strategy Selection Area */}
+            {/* 전략 선택 부분 */}
             <Paper variant="outlined" sx={{ p: 1, mb: 2, bgcolor: '#f5f5f5' }}>
                 <Typography variant="subtitle2" gutterBottom>Strategy Control</Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -90,7 +89,7 @@ const CommandPanel = ({ robotId, strategies, selectedStrategy, onStrategyChange 
                 </Box>
             </Paper>
 
-            {/* SSH Commands Area */}
+            {/* SSH 명령어 부분 */}
             <Typography variant="subtitle2" gutterBottom>System Commands</Typography>
             <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Button
@@ -142,7 +141,7 @@ const CommandPanel = ({ robotId, strategies, selectedStrategy, onStrategyChange 
                 </Button>
             </Box>
 
-            {/* Terminal Output */}
+            {/* 터미널 출력 */}
             <Box sx={{
                 bgcolor: 'black',
                 color: '#00ff00',

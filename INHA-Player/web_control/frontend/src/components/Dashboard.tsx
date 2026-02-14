@@ -11,19 +11,17 @@ import StateHistoryBoard, { StateLog } from './StateHistoryBoard';
 import GameLogBoard, { GameLog } from './GameLogBoard';
 import { PENALTY_MAP } from '../constants/PenaltyTypes';
 
-// [대시보드 컴포넌트]
-// 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
-// Force Rebuild
+// 대시보드 컴포넌트 -> 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
 const DashboardComp = () => {
     // 1. 로봇 상태 데이터 (웹소켓 수신)
     const [robots, setRobots] = useState<{ [key: string]: any }>({});
     const prevRobotsRef = useRef<{ [key: string]: any }>({}); // 이전 상태 추적용
 
-    // History Log State
+    // History 기록
     const [historyLogs, setHistoryLogs] = useState<StateLog[]>([]);
     const logIdCounter = useRef(0);
 
-    // Default GameInfo state to ensure UI renders
+    // 버그 방지 디폴트 값 넣어주기
     const defaultGameInfo: GameInfo = {
         state: "WAITING",
         secsRemaining: 0,
@@ -36,10 +34,10 @@ const DashboardComp = () => {
     };
     const [gameInfo, setGameInfo] = useState<GameInfo | null>(defaultGameInfo);
 
-    // 2. SSH 연결 상태 (연결된 로봇 ID 목록)
+    // 2. SSH 연결 상태
     const [connectedRobots, setConnectedRobots] = useState<string[]>([]);
 
-    // 3. 현재 제어 패널이 열려있는 로봇 ID (하나만 선택 가능)
+    // 3. 현재 제어 패널이 열려있는 로봇 ID
     const [controlTarget, setControlTarget] = useState<string | null>(null);
 
     // 4. SSH 연결 다이얼로그 상태
@@ -95,7 +93,7 @@ const DashboardComp = () => {
                                     setHistoryLogs(prevLogs => [...prevLogs.slice(-99), newLog]); // Keep last 100
                                 }
 
-                                // Check Action Change (Kick, Dribble etc)
+                                // Check Action Change
                                 if (newRobot.action !== prevRobot.action && newRobot.action !== undefined) {
                                     const newLog: StateLog = {
                                         id: logIdCounter.current++,
@@ -110,14 +108,14 @@ const DashboardComp = () => {
                             }
                         });
 
-                        prevRobotsRef.current = newRobots; // Update ref for next comparison
+                        prevRobotsRef.current = newRobots;
                         return newRobots;
                     });
                 }
 
                 if (data.game_info) {
                     const newInfo = data.game_info as GameInfo;
-                    const prevInfo = prevGameInfoRef.current; // might be null initially
+                    const prevInfo = prevGameInfoRef.current;
 
                     if (prevInfo && prevInfo.teams && newInfo.teams) {
                         const teamColors = ["BLUE", "RED"];
@@ -128,7 +126,7 @@ const DashboardComp = () => {
 
                             newTeam.players.forEach((newPlayer, pIdx) => {
                                 const prevPlayer = prevTeam.players ? prevTeam.players[pIdx] : null;
-                                // Detect Penalty Change: Unpenalized -> Penalized
+
                                 if (prevPlayer && prevPlayer.penalty === 0 && newPlayer.penalty !== 0) {
                                     const now = new Date().toLocaleTimeString('en-US', { hour12: false });
                                     const reason = PENALTY_MAP[newPlayer.penalty] || `Unknown Penalty`;
@@ -163,12 +161,12 @@ const DashboardComp = () => {
             .catch(err => console.error("Strategy Fetch Error", err));
     }, []);
 
-    // [핸들러] 전략 선택 변경
+    // 핸들러 -> 전략 선택 변경
     const handleStrategyChange = (robotId: string, strategy: string) => {
         setSelectedStrategies(prev => ({ ...prev, [robotId]: strategy }));
     };
 
-    // [핸들러] 전략 적용 (Apply Strategy)
+    // 핸들러 -> 전략 적용
     const handleApplyStrategy = async (robotId: string) => {
         const strategy = selectedStrategies[robotId];
         if (!strategy) {
@@ -189,7 +187,7 @@ const DashboardComp = () => {
         }
     };
 
-    // [핸들러] 비상 정지 (Emergency Stop)
+    // 핸들러 -> 비상 정지
     const handleEmergencyStop = async () => {
         if (!window.confirm("EMERGENCY STOP: Are you sure you want to stop ALL robots?")) return;
 
@@ -201,7 +199,7 @@ const DashboardComp = () => {
         }
     };
 
-    // [핸들러] SSH 연결 완료
+    // 핸들러 -> SSH 연결 완료
     const handleSSHConnected = (robotId: string) => {
         if (!connectedRobots.includes(robotId)) {
             setConnectedRobots([...connectedRobots, robotId]);
@@ -237,8 +235,8 @@ const DashboardComp = () => {
                 </Box>
             </Box>
 
-            {/* 1. 게임 정보 보드 (GameController) & Log Board */}
-            <Grid container spacing={3} sx={{ mb: 6, height: { xs: 'auto', md: '180px' } }}>
+            {/* 1. 게임 정보 보드 & 이벤트 로그 */}
+            <Grid container spacing={3} sx={{ mb: 6, height: { xs: 'auto', md: '200px' } }}>
                 <Grid item xs={12} md={8}>
                     {gameInfo && <GameInfoBoard info={gameInfo} />}
                 </Grid>
@@ -248,7 +246,7 @@ const DashboardComp = () => {
             </Grid>
 
             <Grid container spacing={3}>
-                {/* 2. 로봇 상태 카드 목록 (상단) */}
+                {/* 2. 로봇 상태 카드 목록 */}
                 {/* 연결된 로봇들의 개별 상태(배터리, 역할, 전략)를 카드 형태로 나열 */}
                 {['robot_1', 'robot_2', 'robot_3', 'robot_4', 'robot_5'].map(id => {
                     const robot = robots[id] || {};

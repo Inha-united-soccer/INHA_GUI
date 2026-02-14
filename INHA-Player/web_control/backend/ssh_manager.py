@@ -34,7 +34,7 @@ class SSHManager:
             self.logger.error(f"Failed to connect to {robot_id}: {e}")
             return False
 
-    # [원격 명령 실행] -> 특정 로봇에게 기본적인 리눅스 쉘 명령어를 전송하고 결과를 받아오기
+    # 원격 명령 실행 -> 특정 로봇에게 기본적인 리눅스 쉘 명령어를 전송하고 결과를 받아오기
     def execute_command(self, robot_id, command):
         if robot_id not in self.clients:
             return None, "Not connected"
@@ -74,17 +74,16 @@ class SSHManager:
             return False, "Not connected"
 
         try:
-            # XML 파싱하여 ID 및 역할 확인 (영구 저장 여부 결정)
+            # XML 파싱하여 ID 및 역할 확인
             import xml.etree.ElementTree as ET
             root = ET.fromstring(xml_content)
             bt_node = root.find('BehaviorTree')
             strategy_id = bt_node.get('ID') if bt_node is not None else None
             
-            # Strategy is only deployed to /tmp/strategy_deploy.xml for runtime execution
             persistence_cmd = ""
             print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
 
-            # ROS 2 환경 설정 명령어 (배포 스크립트 실행 전 환경 변수 로드)
+            # ROS 2 환경 설정 명령어
             setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
             
             # deploy.py배포용 파이썬 스크립트 동적 생성 -> 로봇 안에서 직접 'ros2 topic pub'을 하는 대신 파이썬 코드로 publish 하는 것이 더 안정적임
@@ -132,7 +131,7 @@ except Exception as e:
             py_b64 = base64.b64encode(py_code.encode('utf-8')).decode('utf-8')
             write_py_cmd = f"echo '{py_b64}' | base64 -d > /tmp/deploy.py"
             
-            # 최종 실행 명령어 조합 -> XML생성 -> [영구저장] -> 파이썬생성 -> 환경설정 -> 파이썬실행
+            # 최종 실행 명령어 조합 -> XML생성 -> [영구저장] -> 파이썬생성 -> 환경설정 -> 파이썬 실행
             full_cmd = f"bash -c \"{write_xml_cmd}; {persistence_cmd} {write_py_cmd}; {setup_cmd}; python3 /tmp/deploy.py\""
             
             # 원격 실행
@@ -157,7 +156,7 @@ except Exception as e:
             self.logger.error(f"Deploy exception: {e}")
             return False, f"Deploy exception: {e}"
 
-    # [시스템 로그 가져오기] -> 'tail' 명령어로 launcher.log 파일의 뒷부분만 짤라서 가져온다
+    # 시스템 로그 가져오기 -> 'tail' 명령어로 launcher.log 파일의 뒷부분만 짤라서 가져온다
     def fetch_log(self, robot_id, lines=50):
         if robot_id not in self.clients:
             return "Not connected"
