@@ -85,8 +85,8 @@ class GCMonitor:
             # 버전 확인
             if len(data) < 6: return
             
-            # SPL v15 확인
-            if data[4] == 15: 
+            # SPL v15 또는 v18 확인
+            if data[4] == 15 or data[4] == 18:
                 print(f"[GC] Detected SPL v{data[4]} Packet")
                 self.parse_spl_packet(data)
                 return
