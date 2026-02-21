@@ -26,6 +26,8 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 | :---: | :---: | :---: |
 | <img width="100%" alt="connect" src="https://github.com/user-attachments/assets/2e863aa6-46da-4f7d-ab80-e69b93be912f" /> <br> **Connection & Logs** | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="90%"> <br> **Strategy Interface** | <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="80%"> <br> **Detailed Control** |
 
+<br>
+
 | **Strategy Builder View** |
 | :---: |
 | <img width="100%" alt="blockly" src="https://github.com/user-attachments/assets/ba1ab688-f8be-4492-8e91-aa9ea558a988" /> <br> **Behavior Tree Visual Editor (Blockly)** |
