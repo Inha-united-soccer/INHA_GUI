@@ -19,7 +19,7 @@ app = FastAPI()
 # CORS 설정 (Cross-Origin Resource Sharing) 보안 정책 상, 다른 포트(3000번 React)에서 이 서버(8000번)로 요청을 보낼 때 차단되지 않도록 허용한다
 # 웹 브라우저의 보안 정책으로 인해 다른 포트(React 3000번 vs API 8000번) 간의 통신은 기본적으로 차단되는데 이를 허용해주는 설정
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware, # 프론트엔드(React, 보통 3000포트)와 백엔드(FastAPI, 8000포트)의 포트가 달라서 발생하는 CORS(교차 출처) 에러를 막아주는 역할
     allow_origins=["*"],  # 모든 출처(Origin)에서의 접근을 허용 (개발 편의성)
     allow_credentials=True, # 쿠키 등 인증 정보 포함 허용
     allow_methods=["*"],  # 모든 HTTP 메서드(GET, POST, PUT, DELETE 등) 허용
@@ -158,6 +158,7 @@ class StrategySave(BaseModel):
 # Blockly로 작성한 전략을 서버에 파일로 저장한다 // 삭제 예정
 @app.post("/api/strategies")
 async def save_strategy(data: StrategySave):
+    # 연결된 로봇들에게 xml_content를 전송
     filename = data.name if data.name.endswith(".xml") else f"{data.name}.xml"
     path = os.path.join(STRATEGY_DIR, filename)
     with open(path, "w") as f:
@@ -182,7 +183,7 @@ from gc_monitor import gc_monitor
 def emergency_stop():
     print("[API] Emergency Stop Requested!")
     
-    # 정지용 전략 XML
+    # # 모든 로봇에게 stop_xml 배포
     stop_xml = """
     <root main_tree_to_execute="MainTree">
         <BehaviorTree ID="MainTree">
@@ -213,6 +214,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept() # 연결 수락
     try:
         while True:
+            # udp_monitor와 gc_monitor에서 상태를 가져와 JSON으로 묶음
             status = {}
             
             # 1. UDP Monitor 데이터 우선 사용 (실제 로봇 데이터)

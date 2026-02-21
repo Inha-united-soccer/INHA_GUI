@@ -15,7 +15,7 @@ MAX_NUM_PLAYERS = 20
 # -----------------------------------------------------------------------------------------
 class GCMonitor:
     def __init__(self):
-        # UDP 소켓 생성
+        # UDP 통신하겠다 선언 - 소켓 생성(TCP와 달리 연결 확인 없이 빠르게 데이터만 던지는 방식)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:

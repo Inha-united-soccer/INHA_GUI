@@ -74,16 +74,23 @@ class SSHManager:
             return False, "Not connected"
 
         try:
-            # XML 파싱하여 ID 및 역할 확인
+            # XML 데이터를 해석하기 위한 라이브러리인 ElementTree
             import xml.etree.ElementTree as ET
+
+            # 문자열 형태의 xml_content를 XML 객체 트리 구조로 변환
             root = ET.fromstring(xml_content)
+
+            # XML 내에서 <BehaviorTree> 태그를 가진 노드를 찾는다
             bt_node = root.find('BehaviorTree')
+
+            # 해당 노드가 존재한다면 ID 속성값을 가져와 strategy_id에 저장하고 없으면 None을 할당
             strategy_id = bt_node.get('ID') if bt_node is not None else None
             
+            # 영구 저장 등을 위한 추가 명령어를 담을 변수를 초기화 - 현재는 비어있음
             persistence_cmd = ""
             print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
 
-            # ROS 2 환경 설정 명령어
+            # 로봇에서 ROS2 환경을 설정하는 쉘 명령어 - humble 또는 foxy 버전의 설정 파일을 불러오고, FastDDS 통신 설정을 위한 환경 변수
             setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
             
             # deploy.py배포용 파이썬 스크립트 동적 생성 -> 로봇 안에서 직접 'ros2 topic pub'을 하는 대신 파이썬 코드로 publish 하는 것이 더 안정적임
@@ -96,13 +103,15 @@ import os
 
 print("[Deploy] Starting deployment script...")
 try:
+    # ROS 2 통신을 시작하고 web_deployer 노드 만듦
     rclpy.init()
     node = rclpy.create_node('web_deployer')
-    # Brain 노드가 이 토픽을 구독하고 있음
+
+    # /robot_id/strategy/deploy 주소(Topic)로 문자열(String) 메시지 보낼 준비
     pub = node.create_publisher(String, '/{robot_id}/strategy/deploy', 10)
-    #메시지를 보낼 주소(토픽)
     msg = String()
     
+    # 경로에 파일이 있는지 보고 XML 파일의 텍스트 내용 전체를 ROS2 메시지 data 필드에 모두 담는다
     if not os.path.exists('/tmp/strategy_deploy.xml'):
         sys.exit(1) # 파일 없으면 즉시 종료
         
@@ -117,6 +126,8 @@ try:
         time.sleep(0.2)
     
     print("[Deploy] Publish complete.")
+
+    # 전송이 끝나면 노드를 안전하게 없애고 종료
     node.destroy_node()
     rclpy.shutdown()
 except Exception as e:
