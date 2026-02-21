@@ -7,8 +7,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?logo=fastapi&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 
-**A powerful and intuitive command interface designed for humanoid robot systems**
-This platform provides real-time status monitoring, dynamic strategy deployment, seamless GameController integration, and live 2D field visualization.
+**Bridging the gap between complex robotic logic and intuitive control, we are architecting a truly scalable ecosystem to empower the RoboCup community and humanoid robot research.**
+
+This platform serves as a powerful and intuitive command interface, providing real-time status monitoring, dynamic strategy deployment, and live 2D field visualization. Stay tuned as we continue to push the limits of how we interact with and control humanoid systems in competitive environments.
 
 ---
 
@@ -16,21 +17,20 @@ This platform provides real-time status monitoring, dynamic strategy deployment,
 
 ## 📸 Interface Preview
 
-| **Dashboard View** |
+| **Main Dashboard View** |
 | :---: |
-| <img width="100%" height="701" alt="INHA WCC" src="https://github.com/user-attachments/assets/42e82322-036a-4eb9-bc44-ea3871dd928c" /> <br> **Main Dashboard & Robot Status Cards** |
+| <img width="100%" height="701" alt="INHA WCC" src="https://github.com/user-attachments/assets/42e82322-036a-4eb9-bc44-ea3871dd928c" /> |
 
-<br>
 
 | Connect to Robot | Strategy Deployment | Control Panel |
 | :---: | :---: | :---: |
-| <img width="100%" alt="connect" src="https://github.com/user-attachments/assets/2e863aa6-46da-4f7d-ab80-e69b93be912f" /> <br> **Connection & Logs** | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="90%"> <br> **Strategy Interface** | <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="80%"> <br> **Detailed Control** |
+| <img width="100%" alt="connect" src="https://github.com/user-attachments/assets/2e863aa6-46da-4f7d-ab80-e69b93be912f" /> | <img src="https://github.com/user-attachments/assets/c15c8cce-4e40-4243-b195-a4118103f9b2" width="90%"> <br> | <img src="https://github.com/user-attachments/assets/88302c3b-3c29-44e2-af77-b4e90d873b1a" width="80%"> <br> |
 
 <br>
 
-| **Strategy Builder View** |
+| **Strategy Builder View: Behavior Tree Visual Editor (Blockly)** |
 | :---: |
-| <img width="100%" alt="blockly" src="https://github.com/user-attachments/assets/ba1ab688-f8be-4492-8e91-aa9ea558a988" /> <br> **Behavior Tree Visual Editor (Blockly)** |
+| <img width="100%" alt="blockly" src="https://github.com/user-attachments/assets/ba1ab688-f8be-4492-8e91-aa9ea558a988" /> <br> |
 
 ---
 
@@ -120,6 +120,4 @@ We are continuously working to make the **INHA-Player Web Control Center** more 
 
 * **Remote Configuration Editor** A built-in JSON/YAML editor to modify robot parameters and strategy configurations on-the-fly without needing to manually edit files via SSH terminal.
 
-### 🚀 Core Vision & Philosophy
-We are architecting this platform to be a truly scalable ecosystem, bridging the gap between complex robotic logic and intuitive control.</br>
-**Stay tuned as we continue to redefine the boundaries of Human-Robot Interaction.**
+
