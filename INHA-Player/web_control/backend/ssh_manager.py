@@ -134,11 +134,6 @@ except Exception as e:
     print(f"[Deploy Error] {{e}}")
     sys.exit(1)
 """
-            # 역할: 
-            # 1. /tmp에 저장된 Base64 텍스트를 읽어옴
-            # 2. 그걸 다시 원래의 XML 파일로 디코딩(복구)
-            # 3. ROS 2가 읽을 수 있도록 실제 파일을 생성
-            # 파이썬 코드도 Base64로 인코딩해서 전송
             py_b64 = base64.b64encode(py_code.encode('utf-8')).decode('utf-8')
             write_py_cmd = f"echo '{py_b64}' | base64 -d > /tmp/deploy.py"
             

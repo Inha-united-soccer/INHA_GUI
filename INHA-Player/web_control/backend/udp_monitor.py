@@ -45,30 +45,28 @@ import math
 # ?: 1 bool (passSignal)
 # 7x: 7 pad bytes
 # 2d: 2 doubles (passTarget)
-FMT = "<5i4?3d3d3d2d2i?7x2d" 
-EXPECTED_SIZE = struct.calcsize(FMT) # Should be 144
+FMT = "<5i4?3d3d3d2d2i?7x2d" # FMT는 수신된 UDP 바이너리 패킷을 struct.unpack으로 풀기 위한 포맷 문자열
+EXPECTED_SIZE = struct.calcsize(FMT) # 이 구조체 정확한 바이트 크기가 144니까 수신 데이터 길이가 이 값이랑 다르면 무시하도록
 
 class UDPMonitor:
     def __init__(self, team_id=1):
         self.team_id = team_id
-        # Communication Broadcast Port: 10000 + TEAM_ID (RoboCup SPL Standard) or determined by config
-        # Based on BrainCommunication.cpp: initCommunicationReceiver binds to _unicast_udp_port (30000 + teamId)
-        # Note: The robots broadcast to port 30000 + teamId (Unicast usually implies specific IP, but here used for TeamComm?)
-        # Let's assume we listen on 30000 + team_id as per previous context
+        
+        # 팀 통신 수신 포트
         self.port = 30000 + self.team_id
         
         # UDP 소켓 생성 및 바인딩
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # 포트 재사용 허용
         try:
-            self.sock.bind(('0.0.0.0', self.port))
+            self.sock.bind(('0.0.0.0', self.port)) # 모든 인터페이스에서 수신
             print(f"[UDP] Listening on port {self.port}")
         except Exception as e:
             print(f"[UDP] Bind error: {e}")
             self.sock = None
 
         self.robots = {} # 수신된 로봇 상태 데이터 저장소 { "robot_ID": { ... } }
-        self.running = True
+        self.running = True # 스레드 종료 flag
         
         # 1. 수신 스레드 시작
         # 들어오는 패킷을 계속해서 받아서 파싱
@@ -81,6 +79,8 @@ class UDPMonitor:
         self.discovery_thread = threading.Thread(target=self.broadcast_discovery, daemon=True)
         self.discovery_thread.start()
 
+    # 즉 init을 호출하면 바로 수신 스레드 + Discovery 송신 스레드가 동작함
+
     # [수신 루프]
     def loop(self):
         if not self.sock: return
@@ -89,7 +89,7 @@ class UDPMonitor:
                 # 1024 버퍼 크기로 데이터 수신
                 data, addr = self.sock.recvfrom(1024)
                 
-                # 데이터 크기가 예상된 구조체 크기와 일치하는지 확인
+                # 데이터 크기가 예상된 구조체 크기와 일치하는지 확인 - 길이가 EXPECTED_SIZE이면 parse_packet() 호출
                 if len(data) == EXPECTED_SIZE:
                     self.parse_packet(data, addr)
                 else:
@@ -116,13 +116,14 @@ class UDPMonitor:
         # int playerId; (Mac을 99번 선수로 위장하여 구별)
         validation = 41203
         comm_id = 0
-        player_id = 99 # Debugger ID
+        player_id = 99 # 99번 선수로 위장
         
         print(f"[UDP] Broadcasting Discovery to port {dest_port}...")
         
         while self.running:
             try:
-                # 데이터를 리틀 엔디안(<) 정수(i) 4개로 패킹
+                # 데이터를 리틀 엔디안(<) 정수(i) 4개로 패킹 - struct.pack("<4i", ...) 해서 16바이트 전송.
+                # -> 로봇들의 팀원 목록에 이 GUI를 포함하게 됨
                 msg = struct.pack("<4i", validation, comm_id, self.team_id, player_id)
                 # 브로드캐스트 주소로 전송
                 sock.sendto(msg, ('<broadcast>', dest_port))
@@ -134,11 +135,11 @@ class UDPMonitor:
                 time.sleep(1.0)
 
     # [패킷 파싱]
-    # 바이너리 데이터를 python 딕셔너리로 변환
+    # 바이너리 데이터를 python 딕셔너리로 변환 - 수신한 바이너리 패킷을 의미 있는 값으로 해석
     def parse_packet(self, data, addr):
         print(f"[UDP] Received {len(data)} bytes from {addr}") # Verbose debug
         try:
-            # struct.unpack을 사용하여 바이너리 데이터 해독
+            # struct.unpack을 사용하여 바이너리 데이터 해독 (튜플)
             unpacked = struct.unpack(FMT, data)
 
             # 데이터 추출
@@ -161,13 +162,10 @@ class UDPMonitor:
             
             cmd = unpacked[21]
 
-            # 로봇 ID 생성 (예: robot_1)
+            # 로봇 ID 생성
             robot_id = f"robot_{player_id}"
             
-            # Role 매핑 (TeamCommunicationMsg 참고)
-            # 1: striker, 2: defender, 3: goal_keeper (BrainCommunication.cpp line 373 logic uses 1=striker, 2=defender??)
-            # BrainCommunication.cpp sends: role == "striker" ? 1 : 2. (GK is not handled explicitly there?)
-            # Let's trust the map we had or update it.
+            # Role 매핑 (TeamCommunicationMsg) - role_map으로 정수 → 문자열
             role_map = {0: "Unknown", 1: "Striker", 2: "Defender", 3: "Goalkeeper", 4: "Support"}
             role_str = role_map.get(role_int, f"Role {role_int}")
 
@@ -180,7 +178,7 @@ class UDPMonitor:
             bx = unpacked[12]
             by = unpacked[13] # Ball Z is unpacked[14]
 
-            # 상세 상태 문자열 생성
+            # 상태 설명
             if not is_alive:
                 state_desc = "Fallen"
             elif ball_detected:
@@ -202,7 +200,7 @@ class UDPMonitor:
             # Update PPS tracking
             self._update_pps(robot_id, now)
 
-            # Update Status
+            # 이제 마지막으로 self.robots[robot_id]에 아래 정보들 저장
             self.robots[robot_id] = {
                 "id": robot_id,
                 "role": role_str,
@@ -219,30 +217,30 @@ class UDPMonitor:
                 "last_seen": now,
                 "ip": addr[0],
                 "packet_size": packet_size,
-                "pps": self.packet_rates.get(robot_id, 0.0)
+                "pps": self.packet_rates.get(robot_id, 0.0) # 초당 패킷수
             }
         except Exception as e:
             print(f"[UDP] Parse error: {e}")
 
-    def _update_pps(self, robot_id, now):
+    def _update_pps(self, robot_id, now): # 각 로봇별로 최근 1초 동안 받은 패킷 수 계산
         if not hasattr(self, 'packet_stats'):
-            self.packet_stats = {}
+            self.packet_stats = {} 
             self.packet_rates = {}
 
         if robot_id not in self.packet_stats:
             self.packet_stats[robot_id] = []
         
-        # Add current timestamp
+        # self.packet_stats에 타임스탬프를 축적
         self.packet_stats[robot_id].append(now)
         
-        # Remove timestamps older than 1.0 second
+        # 1초 넘은 것은 제거
         self.packet_stats[robot_id] = [t for t in self.packet_stats[robot_id] if now - t <= 1.0]
         
-        # PPS = count of packets in last 1 second
+        # 결과 카운트를 self.packet_rates에 저장
         self.packet_rates[robot_id] = len(self.packet_stats[robot_id])
 
     def get_status(self):
-        # Clean up old robots (timeout 3s)
+        # last_seen이 3초 이상 지난 로봇은 삭제 - 남아있는 self.robots 반환
         now = time.time()
         expired = [rid for rid, r in self.robots.items() if now - r['last_seen'] > 3.0]
         for rid in expired:
@@ -254,4 +252,4 @@ class UDPMonitor:
                 
         return self.robots
 
-udp_monitor = UDPMonitor(team_id=1) # Default Team 1
+udp_monitor = UDPMonitor(team_id=1) # 이 줄이 실행되면서 실제 모니터가 즉시 동작

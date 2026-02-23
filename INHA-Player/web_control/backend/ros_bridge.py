@@ -17,8 +17,7 @@ except ImportError:
     ROS_AVAILABLE = False
     class Node: pass # Dummy class
 
-# 웹 서버와 ROS 2 시스템 간의 브릿지 역할을 하는 클래스
-# 로봇의 상태(위치, 배터리 등)를 수신하고, 웹에서 내린 명령을 ROS 토픽으로 발행
+# 웹 서버와 ROS 2 시스템 간의 브릿지 역할을 하는 클래스 - 로봇의 상태(위치, 배터리 등)를 수신하고, 웹에서 내린 명령을 ROS 토픽으로 발행
 class ROSBridge(Node):
     def __init__(self):
         self.robot_status = {} # 로봇들의 현재 상태 저장소

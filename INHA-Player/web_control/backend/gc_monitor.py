@@ -3,10 +3,8 @@ import struct
 import threading
 import time
 
-# 상수 선언
-GAMECONTROLLER_DATA_PORT = 3838
-# RoboCupGameControlData.h defines version 15
-GAMECONTROLLER_STRUCT_VERSION = 15
+GAMECONTROLLER_DATA_PORT = 3838 # 겜컨이 브로드캐스트하는 기본 포트
+GAMECONTROLLER_STRUCT_VERSION = 15 # RoboCupGameControlData.h
 MAX_NUM_PLAYERS = 20
 
 # -----------------------------------------------------------------------------------------
@@ -22,9 +20,10 @@ class GCMonitor:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         except AttributeError:
             pass 
-        self.sock.settimeout(0.5) 
+        self.sock.settimeout(0.5)  # recvfrom()이 0.5초마다 타임아웃 되도록 해서 무한 블로킹 방지
         
         try:
+            # 심판 서버가 쓰는 3838번 포트 연결
             self.sock.bind(('', GAMECONTROLLER_DATA_PORT))
             print(f"[GC] Listening on port {GAMECONTROLLER_DATA_PORT}")
         except Exception as e:
@@ -33,7 +32,7 @@ class GCMonitor:
 
         self.running = True
         
-        # 파싱된 데이터 저장소
+        # 파싱된 데이터 저장소 (2팀) - GUI 기본 필드 구성
         self.data = {
             "state": "UNKNOWN",
             "secsRemaining": 0,
@@ -47,19 +46,22 @@ class GCMonitor:
 
         # 누적 페널티 카운트 추적용 (재시작 시 초기화됨)
         self.team_total_penalties = [0, 0]
+
         # 이전 프레임의 선수별 페널티 상태 [팀0[20명], 팀1[20명]]
         self.prev_players_penalty = [[0]*MAX_NUM_PLAYERS, [0]*MAX_NUM_PLAYERS]
 
+        # 통신을 기다리는 동안 멈추면 안되므로 스레드를 시켜 돌려둠
         self.thread = threading.Thread(target=self.loop, daemon=True)
         self.thread.start()
 
-    def loop(self):
+    def loop(self): # UDP 수신 루프 - 서버가 켜져있는 동안 계속 돔
         if not self.sock: return
         while self.running:
             try:
+                # 데이터가 올 때까지 기다림 - 데이터가 오면 data 변수에 넣음
                 data, addr = self.sock.recvfrom(4096)
                 
-                # 헤더 체크 'RGme'
+                # 심판이 보내는 데이터는 항상 'RGme'로 시작함 - 받은 패킷이 b'RGme' 헤더로 시작하면 parse_packet() 호출
                 if len(data) >= 4 and data[0:4] == b'RGme':
                      self.parse_packet(data)
 
@@ -69,10 +71,11 @@ class GCMonitor:
                 print(f"[GC] Error: {e}")
                 time.sleep(1)
 
+    # 여기서 패킷 종류 판별과 버전 분기를 담당
     def parse_packet(self, data):
         print(f"[GC] Received {len(data)} bytes")
         try:
-            # 헤더 확인 'RGme'
+            # 1. 헤더 확인 'RGme'
             if len(data) < 4: 
                 print("[GC] Data too short")
                 return
@@ -82,10 +85,10 @@ class GCMonitor:
 
             print(f"[GC] Header OK. Version Byte: {data[4]}")
 
-            # 버전 확인
+            # 2. 버전 확인
             if len(data) < 6: return
             
-            # SPL v15 또는 v18 확인
+            # SPL v15 또는 v18 확인 - data[4] 값이 15 또는 18이면 SPL 패킷, data[4:6]를 uint16으로 읽었을 때 12이면 HL 패킷
             if data[4] == 15 or data[4] == 18:
                 print(f"[GC] Detected SPL v{data[4]} Packet")
                 self.parse_spl_packet(data)
@@ -104,13 +107,15 @@ class GCMonitor:
         except Exception as e:
             print(f"[GC] Parse error: {e}")
 
-    def parse_spl_packet(self, data): # 파싱 로직
+    def parse_spl_packet(self, data): # SPL(v15 또는 v18) 패킷 파서
         try:
             if len(data) < 18: return
             (header, version, packet_num, players_per_team, 
              comp_phase, comp_type, game_phase, 
              state, set_play, first_half, kicking_team, 
-             secs_remaining, secondary_time) = struct.unpack("<4sBBBBBBBBBBhh", data[0:18])
+
+             # 통신으로 들어오는 이진수 덩어리를 다시 글자로 바꾸기 - 데이터의 앞 4바이트는 글자(s)로 읽고 그다음은 숫자(B)로 읽는 규칙 정의
+             secs_remaining, secondary_time) = struct.unpack("<4sBBBBBBBBBBhh", data[0:18]) # 헤더 파싱
 
             STATE_MAP = {0: "INITIAL", 1: "READY", 2: "SET", 3: "PLAYING", 4: "FINISHED"}
             state_str = STATE_MAP.get(state, "UNKNOWN")
@@ -119,9 +124,9 @@ class GCMonitor:
                             3: "CORNER_KICK", 4: "KICK_IN", 5: "PENALTY_KICK"}
             set_play_str = SET_PLAY_MAP.get(set_play, "NONE")
 
-            # State Reset Logic
+            # INITIAL 상태로 돌아가면 누적 페널티 카운터 초기화
             if state_str == "INITIAL":
-                # 게임이 INITIAL 상태로 돌아가면 카운터 초기화
+               
                 if self.data["state"] != "INITIAL": # 상태가 변경된 순간에만 로그 출력
                      print("[GC] State changed to INITIAL. Resetting Team Penalty Counts.")
                      self.team_total_penalties = [0, 0]
@@ -136,7 +141,7 @@ class GCMonitor:
             self.data["dropInTime"] = 0
             self.data["dropInTeam"] = 0
             
-            # SPL 팀 데이터 파싱
+            # SPL 팀 정보 파싱 - 각 팀마다 팀번호, 색상, 골키퍼 색상, 점수 등
             offset = 18
             TEAM_INFO_SIZE = 10 + (20 * 2) # 50 바이트
             parsed_teams = []
@@ -194,7 +199,7 @@ class GCMonitor:
                     "penaltyCount": penalty_count,
                     "totalPenaltyCount": self.team_total_penalties[i],
                     "messageBudget": msg_budget,
-                    "coachMessage": "", # SPL has no coach message field easily accessible here, or different format
+                    "coachMessage": "",
                     "players": players_info
                 })
                 offset += TEAM_INFO_SIZE
@@ -205,7 +210,7 @@ class GCMonitor:
         except Exception as e:
             print(f"[GC] SPL Parse error: {e}")
 
-    def parse_hl_packet(self, data):
+    def parse_hl_packet(self, data): # HL(Humanoid League) v12 패킷 파서
         try:
             if len(data) < 24: return
             
@@ -295,3 +300,5 @@ class GCMonitor:
         return self.data
 
 gc_monitor = GCMonitor()
+
+# 
