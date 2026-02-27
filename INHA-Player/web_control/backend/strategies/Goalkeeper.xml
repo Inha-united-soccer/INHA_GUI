@@ -1,5 +1,6 @@
 <root BTCPP_format="4">
-    <BehaviorTree ID="Goalkeeper">
+    <!-- <BehaviorTree ID="Goalkeeper"> -->
+    <BehaviorTree ID="MainTree"> 
       <ReactiveSequence>
         
         <!-- 1. Self Localization (Flattened from locate.xml) -->

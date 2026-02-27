@@ -11,13 +11,28 @@ class SSHManager:
         self.logger = logging.getLogger("SSHManager")
 
     # [SSH 연결] -> 사용자가 입력한 IP, ID, PW로 로봇에 접속을 시도 - 디폴트값 지정해둘 수 있음
+    
     def connect(self, robot_id, ip, username, password):
         try:
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
             
-            # 실제 연결 시도 (타임아웃 3초) - 잘못된 연결임을 알기에는 충분
-            client.connect(ip, username=username, password=password, timeout=3.0)
+            # IP 문자열에 ':'이 있다면 IP와 포트를 분리
+            port = 22
+            if ":" in ip:
+                ip, port_str = ip.split(":")
+                port = int(port_str)
+                
+            # 실제 연결 시도 (포트 파라미터 추가)
+            client.connect(ip, port=port, username=username, password=password, timeout=3.0)
+
+    # def connect(self, robot_id, ip, username, password):
+    #     try:
+    #         client = paramiko.SSHClient()
+    #         client.set_missing_host_key_policy(paramiko.AutoAddPolicy()) 
+            
+    #         # 실제 연결 시도 (타임아웃 3초) - 잘못된 연결임을 알기에는 충분
+    #         client.connect(ip, username=username, password=password, timeout=3.0)
             
             # [검증] 실제 명령이 먹히는지 확인 - 단순 연결 후 whoami 명령어 실행으로 다시 검증
             stdin, stdout, stderr = client.exec_command("whoami")
@@ -64,10 +79,11 @@ class SSHManager:
     # -----------------------------------------------------------------------------------------
     # [전략 배포 기능] (Hot-Swap)
     # 작성된 Behavior Tree XML을 로봇에게 전송하고 즉시 실행시키는 기능(재부팅 없이 실시간 교체를 위해)
-    # 1. XML 내용을 Base64로 인코딩 (xml 안에는 특수문자가 많아 그냥 보내면 쉘이 깨질 수 있음 base64 문자열로 암호화해서 /tmp에 파일로 저장)
-    # 2. 로봇의 임시 경로(/tmp)에 파일 생성
-    # 3. 파이썬 스크립트를 생성하여 토픽 /{robot_id}/strategy/deploy로 XML 내용 발행
-    # 4. 로봇 내부의 Brain 노드가 이 토픽을 구독하고 즉시 행동을 교체함
+    # 1. XML 내용을 Base64로 인코딩 (XML 내 특수문자로 인해 쉘 통신에서 깨지는 것을 방지하기 위함)
+    # 2. 로봇의 임시 경로(/tmp/strategy_deploy.xml)에 디코딩된 XML 파일 생성
+    # 3. 파이썬 스크립트(deploy.py)를 동적으로 생성하여 로봇에서 실행
+    # 4. deploy.py가 /tmp/strategy_deploy.xml 파일을 읽어 ROS 2 토픽(/{robot_id}/strategy/deploy)으로 발행(Publish)
+    # 5. 로봇 내부의 Brain 노드가 이 토픽을 구독하여 새로운 행동 트리(XML)를 즉시 적용
     # -----------------------------------------------------------------------------------------
     def deploy_strategy(self, robot_id, xml_content):
         if robot_id not in self.clients:
@@ -82,52 +98,79 @@ class SSHManager:
 
             # XML 내에서 <BehaviorTree> 태그를 가진 노드를 찾는다
             bt_node = root.find('BehaviorTree')
-
-            # 해당 노드가 존재한다면 ID 속성값을 가져와 strategy_id에 저장하고 없으면 None을 할당
             strategy_id = bt_node.get('ID') if bt_node is not None else None
-            
-            # 영구 저장 등을 위한 추가 명령어를 담을 변수를 초기화 - 현재는 비어있음
-            persistence_cmd = ""
             print(f"[Deploy] Runtime-only deployment (ID: {strategy_id})")
 
-            # 로봇에서 ROS2 환경을 설정하는 쉘 명령어 - humble 또는 foxy 버전의 설정 파일을 불러오고, FastDDS 통신 설정을 위한 환경 변수
-            setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
-            
-            # deploy.py배포용 파이썬 스크립트 동적 생성 -> 로봇 안에서 직접 'ros2 topic pub'을 하는 대신 파이썬 코드로 publish 하는 것이 더 안정적임
+            # ROS2 환경 소스 설정 명령어
+            setup_cmd = "source /opt/ros/humble/setup.bash 2>/dev/null || source /opt/ros/foxy/setup.bash 2>/dev/null"
+            setup_cmd += "; source /home/booster/Workspace/GUI/INHA-Player/install/setup.bash 2>/dev/null"
+            setup_cmd += "; export FASTRTPS_DEFAULT_PROFILES_FILE=/home/booster/Workspace/GUI/INHA-Player/configs/fastdds.xml"
+            setup_cmd += "; export ROS_LOG_DIR=/tmp"
+
+            # STEP 1: 어떤 topic으로 brain이 수신 대기중인지 자동 탐지
+            # ros2 topic list 에서 /strategy/deploy 로 끝나는 토픽을 찾는다
+            # 예: /robot_1/strategy/deploy 또는 /robot1/strategy/deploy
+            client = self.clients[robot_id]
+            probe_cmd = f"bash -c '{setup_cmd}; ros2 topic list 2>/dev/null | grep strategy/deploy'"
+            stdin, stdout, stderr = client.exec_command(probe_cmd, timeout=8)
+            topic_list_raw = stdout.read().decode().strip()
+            print(f"[Deploy] Detected strategy topics: {topic_list_raw}")
+
+            # 탐지된 토픽 목록에서 알맞은 것을 고른다
+            # 우선순위: robot_id 정확히 일치 > 유일한 토픽 하나 > fallback
+            detected_topic = None
+            if topic_list_raw:
+                topics = [t.strip() for t in topic_list_raw.splitlines() if t.strip()]
+                # robot_id 포함 여부 우선 탐색 (예: robot1, robot_1)
+                for t in topics:
+                    if robot_id.replace('_', '') in t.replace('_', ''):
+                        detected_topic = t
+                        break
+                # 못 찾으면 첫번째꺼
+                if not detected_topic and topics:
+                    detected_topic = topics[0]
+
+            # fallback: 원래 방식대로 robot_id 그대로 사용
+            if not detected_topic:
+                detected_topic = f"/{robot_id}/strategy/deploy"
+                print(f"[Deploy] Topic not auto-detected. Using fallback: {detected_topic}")
+            else:
+                print(f"[Deploy] Using detected topic: {detected_topic}")
+
+            # STEP 2: XML을 Base64로 인코딩해서 /tmp에 파일로 저장
+            xml_b64 = base64.b64encode(xml_content.encode('utf-8')).decode('utf-8')
+            write_xml_cmd = f"echo '{xml_b64}' | base64 -d > /tmp/strategy_deploy.xml"
+
+            # STEP 3: ros2 topic pub 명령으로 직접 전송 (Python 스크립트 없이)
+            # --once: 한 번만 발행
+            # data: XML 파일의 내용을 읽어서 전송 (쉘 치환 사용)
+            pub_cmd = f"XML=$(cat /tmp/strategy_deploy.xml); ros2 topic pub --once {detected_topic} std_msgs/msg/String \"{{data: '$XML'}}\" 2>&1"
+
+            full_cmd = f"bash -c '{setup_cmd}; {write_xml_cmd}; {pub_cmd}; echo Publish complete.'"
+            # Note: XML 내에 따옴표 있으면 깨질 수 있으므로 base64 파이썬 스크립트로 fallback
+            # 만약 위 방식이 안되면 아래 파이썬 방식으로 fallback
             py_code = f"""
+import sys, os
+os.environ['ROS_LOG_DIR'] = '/tmp'
 import rclpy
 from std_msgs.msg import String
 import time
-import sys
-import os
 
 print("[Deploy] Starting deployment script...")
 try:
-    # ROS 2 통신을 시작하고 web_deployer 노드 만듦
     rclpy.init()
-    node = rclpy.create_node('web_deployer')
-
-    # /robot_id/strategy/deploy 주소(Topic)로 문자열(String) 메시지 보낼 준비
-    pub = node.create_publisher(String, '/{robot_id}/strategy/deploy', 10)
+    node = rclpy.create_node('web_deployer_{robot_id}')
+    pub = node.create_publisher(String, '{detected_topic}', 10)
     msg = String()
-    
-    # 경로에 파일이 있는지 보고 XML 파일의 텍스트 내용 전체를 ROS2 메시지 data 필드에 모두 담는다
     if not os.path.exists('/tmp/strategy_deploy.xml'):
-        sys.exit(1) # 파일 없으면 즉시 종료
-        
+        sys.exit(1)
     with open('/tmp/strategy_deploy.xml', 'r') as f:
-        msg.data = f.read() # XML 파일의 모든 텍스트를 메시지에 담음
-
-    print(f"[Deploy] Publishing to /{robot_id}/strategy/deploy...")
-    
-    # 안정적인 수신을 위해 5번 반복 전송
+        msg.data = f.read()
+    print(f"[Deploy] Publishing to {detected_topic}...")
     for i in range(5):
         pub.publish(msg)
         time.sleep(0.2)
-    
     print("[Deploy] Publish complete.")
-
-    # 전송이 끝나면 노드를 안전하게 없애고 종료
     node.destroy_node()
     rclpy.shutdown()
 except Exception as e:
@@ -136,9 +179,8 @@ except Exception as e:
 """
             py_b64 = base64.b64encode(py_code.encode('utf-8')).decode('utf-8')
             write_py_cmd = f"echo '{py_b64}' | base64 -d > /tmp/deploy.py"
-            
-            # 최종 실행 명령어 조합 -> XML생성 -> [영구저장] -> 파이썬생성 -> 환경설정 -> 파이썬 실행
-            full_cmd = f"bash -c \"{write_xml_cmd}; {persistence_cmd} {write_py_cmd}; {setup_cmd}; python3 /tmp/deploy.py\""
+            full_cmd = f"bash -c '{setup_cmd}; {write_xml_cmd}; {write_py_cmd}; python3 /tmp/deploy.py'"
+            print(f"[Deploy] full_cmd topic = {detected_topic}")
             
             # 원격 실행
             client = self.clients[robot_id]
@@ -152,9 +194,7 @@ except Exception as e:
             if err_str: print(f"[Deploy Err] {err_str}")
                 
             if "Publish complete" in out_str:
-                 msg = "Deploy Success"
-                 if persistence_target: msg += f" (Saved to {persistence_target}.xml)"
-                 return True, msg
+                 return True, "Deploy Success"
             else:
                  return False, f"Deploy Failed: {err_str if err_str else out_str}"
                  

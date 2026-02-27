@@ -118,7 +118,7 @@ export default function BlocklyEditor() {
                 }
             });
 
-            // ====== [핵심] 사용자가 원하는 "예쁘고 실제 작동하는" 스트라이커 트리 템플릿 ======
+
             const initialXml = `
             <xml xmlns="https://developers.google.com/blockly/xml">
                 <!-- 최상단: 반응형 펄스 (무한 반복하며 조건 검사) -->

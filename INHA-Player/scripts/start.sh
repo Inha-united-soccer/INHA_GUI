@@ -6,7 +6,6 @@ cd ..
 echo "[STOP EXISTING NODES (IF ANY), TO AVOID CONFILICT]"
 ./scripts/stop.sh
 
-source ./install/setup.bash
 export FASTRTPS_DEFAULT_PROFILES_FILE=./configs/fastdds.xml
 
 echo "[DEBUG] AMENT_PREFIX_PATH: $AMENT_PREFIX_PATH"

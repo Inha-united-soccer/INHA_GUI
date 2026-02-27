@@ -86,11 +86,11 @@ def send_command(command: Command):
     if "brain_nohup.log" in command.cmd:
         command.cmd = command.cmd.replace("brain_nohup.log", "/home/booster/Workspace/GUI/INHA-Player/launcher.log")
         command.cmd = command.cmd.replace("Workspace/Soccer", "Workspace/GUI/INHA-Player")
-        
-        if "source /opt/ros" in command.cmd:
-            command.cmd = command.cmd.replace("; nohup", "; source ./install/setup.bash; nohup")
+        # if "source /opt/ros" in command.cmd:
+        #     command.cmd = command.cmd.replace("; nohup", "; source ./install/setup.bash; nohup")
             
-        print("[API] Redirected output to INHA-Player/launcher.log, switched workspace, and added local source")
+        # print("[API] Redirected output to INHA-Player/launcher.log, switched workspace, and added local source")
+        print("[API] Redirected output to INHA-Player/launcher.log, switched workspace")
     stdout, stderr = ssh_manager.execute_command(command.robot_id, command.cmd)
     if stdout is None:
         raise HTTPException(status_code=500, detail=stderr)

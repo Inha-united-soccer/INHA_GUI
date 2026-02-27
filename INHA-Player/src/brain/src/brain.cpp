@@ -163,7 +163,8 @@ void Brain::init(){
     pubSpeak = create_publisher<std_msgs::msg::String>("/speak", 10);
 
     // Strategy Subscription
-    string strategyTopic = "/robot_" + to_string(config->playerId) + "/strategy/deploy";
+    // string strategyTopic = "/robot_" + to_string(config->playerId) + "/strategy/deploy";
+    string strategyTopic = "strategy/deploy";
     strategySubscription = create_subscription<std_msgs::msg::String>(strategyTopic, 10, bind(&Brain::strategyCallback, this, _1));
 
     // rerun 연결 시에만 사용함 -> 이미지 캡처

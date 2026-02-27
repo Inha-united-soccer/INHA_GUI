@@ -7,8 +7,10 @@
             <type>UDPv4</type>
             <interfaceWhiteList>
                 <address>127.0.0.1</address>
-                <address>192.168.127.101</address>
-                <address>192.168.10.102</address>
+                <!-- <address>192.168.127.101</address>
+                <address>192.168.10.102</address> -->
+                <address>192.168.0.10</address>
+                <address>192.168.0.11</address>
             </interfaceWhiteList>
         </transport_descriptor>
     </transport_descriptors>
