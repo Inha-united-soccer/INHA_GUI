@@ -10,6 +10,9 @@ import LogViewer from './LogViewer';
 import StateHistoryBoard, { StateLog } from './StateHistoryBoard';
 import GameLogBoard, { GameLog } from './GameLogBoard';
 import { PENALTY_MAP } from '../constants/PenaltyTypes';
+import GameAnalytics from './GameAnalytics';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 // 대시보드 컴포넌트 -> 로봇 상태 카드와 SSH 명령 패널을 통합하여 보여주는 메인 화면
 const DashboardComp = () => {
@@ -44,8 +47,12 @@ const DashboardComp = () => {
     const [sshDialogOpen, setSSHDialogOpen] = useState(false);
     const [sshTarget, setSshTarget] = useState<string | null>(null);
 
-    // 5. 로그 뷰어 상태
+    // 5. 로그 & 분석 뷰어 상태
     const [logViewerOpen, setLogViewerOpen] = useState(false);
+    const [analyticsOpen, setAnalyticsOpen] = useState(false);
+
+    // 알림용 (Automated Alerts)
+    const [alertInfo, setAlertInfo] = useState<{ open: boolean, message: string, severity: 'error' | 'warning' | 'info' }>({ open: false, message: '', severity: 'info' });
 
     // 6. 전략 목록 및 각 로봇별 선택된 전략
     const [strategies, setStrategies] = useState<string[]>([]);
@@ -69,8 +76,28 @@ const DashboardComp = () => {
 
                 // 로봇 상태 업데이트 (data.robots)
                 if (data.robots) {
+                    // Check for disconnections
+                    Object.keys(prevRobotsRef.current).forEach(id => {
+                        if (!data.robots[id]) {
+                            setAlertInfo({ open: true, message: `Lost connection to ${id.toUpperCase()}`, severity: 'error' });
+                        }
+                    });
+
                     setRobots(prev => {
                         const newRobots = { ...prev, ...data.robots };
+
+                        // Check states for alerts
+                        Object.keys(data.robots).forEach(robotId => {
+                            const newRobot = data.robots[robotId];
+                            const prevRobot = prevRobotsRef.current[robotId];
+
+                            if (newRobot.state === 'Fallen' && prevRobot?.state !== 'Fallen') {
+                                setAlertInfo({ open: true, message: `${robotId.toUpperCase()} has Fallen!`, severity: 'error' });
+                            }
+                            if (newRobot.pps === 0 && prevRobot?.pps !== 0 && prevRobot?.pps !== undefined) {
+                                setAlertInfo({ open: true, message: `No packets received from ${robotId.toUpperCase()}`, severity: 'warning' });
+                            }
+                        });
 
                         // History Logging Logic
                         Object.keys(data.robots).forEach(robotId => {
@@ -243,6 +270,14 @@ const DashboardComp = () => {
                         onClick={() => setLogViewerOpen(true)}
                     >
                         VIEW SYSTEM LOGS
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="info"
+                        sx={{ mr: 2 }}
+                        onClick={() => setAnalyticsOpen(true)}
+                    >
+                        ANALYTICS
                     </Button>
                     <Button
                         variant="contained"
@@ -428,6 +463,24 @@ const DashboardComp = () => {
                 onClose={() => setLogViewerOpen(false)}
                 robots={connectedRobots}
             />
+
+            {/* анали틱스 뷰어 다이얼로그 */}
+            <GameAnalytics
+                open={analyticsOpen}
+                onClose={() => setAnalyticsOpen(false)}
+            />
+
+            {/* 자동 알림 Snackbar */}
+            <Snackbar
+                open={alertInfo.open}
+                autoHideDuration={4000}
+                onClose={() => setAlertInfo({ ...alertInfo, open: false })}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setAlertInfo({ ...alertInfo, open: false })} severity={alertInfo.severity} sx={{ width: '100%', fontSize: '1.2rem', boxShadow: 3 }}>
+                    {alertInfo.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

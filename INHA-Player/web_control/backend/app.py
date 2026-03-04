@@ -196,8 +196,15 @@ async def load_strategy(name: str):
         return {"xml": f.read()}
 
 from udp_monitor import udp_monitor
-
 from gc_monitor import gc_monitor
+from game_logger import GameLogger
+
+game_logger_instance = GameLogger(gc_monitor, udp_monitor)
+game_logger_instance.start()
+
+@app.get("/api/game_logs")
+def get_game_logs():
+    return {"logs": game_logger_instance.get_logs()}
 
 # 비상 정지 (Emergency Stop) -> 모든 연결된 로봇에게 SetVelocity<0,0,0> 전략을 배포하는 방식으로 정지시킴
 @app.post("/api/emergency_stop")
