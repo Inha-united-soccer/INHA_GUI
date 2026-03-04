@@ -138,7 +138,28 @@ def deploy_strategy_endpoint(data: StrategyDeploy):
     else:
         raise HTTPException(status_code=500, detail="Failed to deploy to any robot")
 
+import subprocess
 
+# GameController 실행 요청 (비동기, 백그라운드)
+@app.post("/api/launch_gamecontroller")
+def launch_gamecontroller():
+    print("[API] Launch 3D GameController Requested!")
+    try:
+        # GameController 디렉토리에서 'ant run' 실행 후 백그라운드로 넘김
+        target_dir = "/Users/mingyu/Workspace/INHA_GUI/GameController"
+        
+        # 프로세스가 부모 종료 시 같이 종료되지 않도록 start_new_session 설정 (Mac/Linux)
+        subprocess.Popen(
+            ["ant", "run"],
+            cwd=target_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True 
+        )
+        return {"status": "success", "message": "GameController started in background"}
+    except Exception as e:
+         print(f"[Error] Failed to launch GameController: {e}")
+         raise HTTPException(status_code=500, detail=str(e))
 
 # 전략 파일들이 저장될 디렉토리
 STRATEGY_DIR = "strategies"

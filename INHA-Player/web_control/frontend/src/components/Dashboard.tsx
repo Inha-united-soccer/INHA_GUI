@@ -210,6 +210,17 @@ const DashboardComp = () => {
         setSSHDialogOpen(false);
     };
 
+    // 핸들러 -> 3D GameController 실행
+    const handleLaunchGameController = async () => {
+        try {
+            await axios.post('http://localhost:8000/api/launch_gamecontroller');
+            // 실행 요청만 보내고 앱이 뜨는 것은 OS에 맡김
+            console.log("GameController launch request sent.");
+        } catch (e: any) {
+            alert(`[FAIL] Game Controller Launch failed: ${e.response?.data?.detail || e.message}`);
+        }
+    };
+
     return (
         <Box sx={{ flexGrow: 1, p: 3 }}>
             {/* 상단 바: 타이틀 & E-STOP */}
@@ -218,6 +229,13 @@ const DashboardComp = () => {
                     INHA Player Control
                 </Typography>
                 <Box>
+                    <Button
+                        variant="contained"
+                        sx={{ mr: 2, bgcolor: '#ff9800', '&:hover': { bgcolor: '#f57c00' } }}
+                        onClick={handleLaunchGameController}
+                    >
+                        LAUNCH 3D GAME CONTROLLER
+                    </Button>
                     <Button
                         variant="contained"
                         color="secondary"
