@@ -49,7 +49,7 @@ FMT = "<5i4?3d3d3d2d2i?7x2d" # FMT는 수신된 UDP 바이너리 패킷을 struc
 EXPECTED_SIZE = struct.calcsize(FMT) # 이 구조체 정확한 바이트 크기가 144니까 수신 데이터 길이가 이 값이랑 다르면 무시하도록
 
 class UDPMonitor:
-    def __init__(self, team_id=1):
+    def __init__(self, team_id=13):
         self.team_id = team_id
         
         # 팀 통신 수신 포트
@@ -304,4 +304,4 @@ class UDPMonitor:
                 
         return self.robots
 
-udp_monitor = UDPMonitor(team_id=1) # 이 줄이 실행되면서 실제 모니터가 즉시 동작
+udp_monitor = UDPMonitor(team_id=13) # 이 줄이 실행되면서 실제 모니터가 즉시 동작
