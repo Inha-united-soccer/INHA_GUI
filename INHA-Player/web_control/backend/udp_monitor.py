@@ -68,6 +68,10 @@ class UDPMonitor:
         self.robots = {} # 수신된 로봇 상태 데이터 저장소 { "robot_ID": { ... } }
         self.running = True # 스레드 종료 flag
         
+        # 3D GameController 연동용 송신 소켓 (GameControlReturnData, 포트 3939)
+        self.bridge_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.bridge_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
         # 1. 수신 스레드 시작
         # 들어오는 패킷을 계속해서 받아서 파싱
         self.thread = threading.Thread(target=self.loop, daemon=True)
@@ -219,6 +223,54 @@ class UDPMonitor:
                 "packet_size": packet_size,
                 "pps": self.packet_rates.get(robot_id, 0.0) # 초당 패킷수
             }
+
+            # [Bridge to GameController 3D App]
+            # 로봇에서 보내는 포맷을 GameControlReturnData (32 bytes) 국제 표준 규격으로 변환하여
+            # 로컬의 GameController (포트 3939)로 포워딩. 이를 통해 K1 3D 모델이 렌더링되게 함.
+            try:
+                # 32 Byte GameControlReturnData Layout:
+                # 4 bytes: header ("RGrt") - ascii
+                # 1 byte: version (4)
+                # 1 byte: playerNum
+                # 1 byte: teamNum
+                # 1 byte: fallen (0 or 1)
+                # 12 bytes: pose [x, y, theta] (float)
+                # 4 bytes: ballAge (float, -1 if not seen)
+                # 8 bytes: ball [x, y] (float)
+                
+                header_bytes = b"RGrt"
+                version = 4
+                
+                # fallen 상태 판단 (is_alive 플래그의 반대)
+                fallen = 0 if is_alive else 1
+                
+                # 공 찾았는지 판단
+                bAge = 0.0 if ball_detected else -1.0
+                
+                # struct format: <4s B B B B 3f f 2f
+                # - 4s: char[4] "RGrt"
+                # - B: unsigned char (version)
+                # - B: unsigned char (playerNum)
+                # - B: unsigned char (teamNum)
+                # - B: unsigned char (fallen)
+                # - 3f: float (x, y, theta)
+                # - f: float (ballAge)
+                # - 2f: float (ball.x, ball.y)
+                bridge_fmt = "<4sBBBBffffff"
+                bridge_msg = struct.pack(bridge_fmt,
+                                         header_bytes,
+                                         version,
+                                         player_id,
+                                         team_id,
+                                         fallen,
+                                         float(rx), float(ry), float(rtheta),
+                                         float(bAge),
+                                         float(bx), float(by))
+                                         
+                self.bridge_sock.sendto(bridge_msg, ('127.0.0.1', 3939))
+            except Exception as be:
+                print(f"[UDP-Bridge] Warning: Failed to parse and forward to GameController: {be}")
+
         except Exception as e:
             print(f"[UDP] Parse error: {e}")
 

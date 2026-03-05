@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Grid, Paper, Typography, Button, FormControl, Select, MenuItem, Chip } from '@mui/material';
 import useWebSocket from 'react-use-websocket';
 import axios from 'axios';
-import FieldVisualizer from './FieldVisualizer';
 import CommandPanel from './CommandPanel';
 import SSHConnectionDialog from './SSHConnectionDialog';
 import GameInfoBoard, { GameInfo } from './GameInfoBoard';
@@ -258,26 +257,11 @@ const DashboardComp = () => {
                 <Box>
                     <Button
                         variant="contained"
-                        sx={{ mr: 2, bgcolor: '#ff9800', '&:hover': { bgcolor: '#f57c00' } }}
-                        onClick={handleLaunchGameController}
-                    >
-                        LAUNCH 3D GAME CONTROLLER
-                    </Button>
-                    <Button
-                        variant="contained"
                         color="secondary"
                         sx={{ mr: 2 }}
                         onClick={() => setLogViewerOpen(true)}
                     >
                         VIEW SYSTEM LOGS
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="info"
-                        sx={{ mr: 2 }}
-                        onClick={() => setAnalyticsOpen(true)}
-                    >
-                        ANALYTICS
                     </Button>
                     <Button
                         variant="contained"
@@ -409,44 +393,59 @@ const DashboardComp = () => {
                     );
                 })}
 
-                {/* 3. 하단 영역: 경기장 시각화 & 선택된 로봇의 커맨드 센터 */}
+                {/* 3. 하단 버튼 영역: 3D 앱 실행 & 로그 분석 */}
                 <Grid item xs={12}>
-                    <Grid container spacing={3}>
-                        {/* 좌측: Field Visualizer */}
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, my: 4 }}>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            sx={{ bgcolor: '#ff9800', '&:hover': { bgcolor: '#f57c00' }, px: 6, py: 2, fontSize: '1.2rem', fontWeight: 'bold' }}
+                            onClick={handleLaunchGameController}
+                        >
+                            LAUNCH 3D GAME CONTROLLER
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="info"
+                            size="large"
+                            sx={{ px: 6, py: 2, fontSize: '1.2rem', fontWeight: 'bold' }}
+                            onClick={() => setAnalyticsOpen(true)}
+                        >
+                            GAME LOG ANALYTICS
+                        </Button>
+                    </Box>
+                </Grid>
 
-                        <Grid item xs={12} md={controlTarget ? 6 : 12}>
-                            <Paper sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-                                <FieldVisualizer robots={robots} />
-                            </Paper>
-                        </Grid>
-
-                        {/* 우측 (또는 전체): SSH Command Center + History Board */}
-                        {controlTarget && (
-                            <Grid item xs={12} md={6}>
-                                <Grid container spacing={2}>
-                                    {/* Left half: Command Panel */}
-                                    <Grid item xs={12}>
-                                        <CommandPanel
-                                            robotId={controlTarget}
-                                            strategies={strategies}
-                                            selectedStrategy={selectedStrategies[controlTarget] || ''}
-                                            onStrategyChange={(robotId: string, strategy: string) => setSelectedStrategies({ ...selectedStrategies, [robotId]: strategy })}
-                                        />
-                                    </Grid>
-                                    {/* Right half: State History Panel (filtered for this robot) */}
-                                    <Grid item xs={12}>
-                                        <StateHistoryBoard logs={historyLogs.filter(log => log.robotId === controlTarget)} />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <Button onClick={() => setControlTarget(null)} fullWidth variant="outlined" sx={{ mt: 1 }}>
-                                            Close Control Panel
-                                        </Button>
-                                    </Grid>
+                {/* 4. 선택된 로봇의 커맨드 센터 */}
+                {controlTarget && (
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: 4, mt: 2, border: '2px solid #1976d2' }}>
+                            <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2' }}>
+                                CONTROL CENTER: {controlTarget.toUpperCase()}
+                            </Typography>
+                            <Grid container spacing={4}>
+                                {/* Left half: Command Panel */}
+                                <Grid item xs={12} md={6}>
+                                    <CommandPanel
+                                        robotId={controlTarget}
+                                        strategies={strategies}
+                                        selectedStrategy={selectedStrategies[controlTarget] || ''}
+                                        onStrategyChange={(robotId: string, strategy: string) => setSelectedStrategies({ ...selectedStrategies, [robotId]: strategy })}
+                                    />
+                                </Grid>
+                                {/* Right half: State History Panel (filtered for this robot) */}
+                                <Grid item xs={12} md={6}>
+                                    <StateHistoryBoard logs={historyLogs.filter(log => log.robotId === controlTarget)} />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Button onClick={() => setControlTarget(null)} fullWidth variant="outlined" sx={{ mt: 2, py: 1.5 }}>
+                                        CLOSE CONTROL PANEL
+                                    </Button>
                                 </Grid>
                             </Grid>
-                        )}
+                        </Paper>
                     </Grid>
-                </Grid>
+                )}
             </Grid>
 
             {/* SSH 연결 다이얼로그 */}
