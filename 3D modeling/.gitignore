@@ -1,0 +1,9 @@
+bin/
+build/
+nbproject/
+.settings/
+.idea
+*~
+error.txt
+/resources/plugins/05/bhuman.jar
+GameController.iws

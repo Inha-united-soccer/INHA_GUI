@@ -268,6 +268,7 @@ class UDPMonitor:
                                          float(bx), float(by))
                                          
                 self.bridge_sock.sendto(bridge_msg, ('127.0.0.1', 3939))
+                # print(f"[UDP-Bridge] Port 3939 Forwarded >> Player: {player_id}, Team: {team_id}, x: {rx}, y: {ry}, fallen: {fallen}")
             except Exception as be:
                 print(f"[UDP-Bridge] Warning: Failed to parse and forward to GameController: {be}")
 

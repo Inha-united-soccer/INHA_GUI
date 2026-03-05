@@ -1,0 +1,96 @@
+<Simulation>
+
+  <Include href="Colors.rsi2"/>
+  <Include href="NaoV4H21.rsi2"/>
+  <Include href="K1.rsi3"/>
+  <Include href="Balls.rsi2"/>
+  <Include href="FieldHSLS.rsi2"/>
+  <Include href="FieldHSLM.rsi2"/>
+  <Include href="FieldHSLL.rsi2"/>
+
+  <Scene>
+    <Body ref="Nao" name="robotBlue" />
+    <Body ref="Nao" name="robotRed">
+      <Set name="NaoColor" value="red"/>
+    </Body>
+    <Body ref="Nao" name="robotBlack">
+      <Set name="NaoColor" value="black"/>
+    </Body>
+    <Body ref="Nao" name="robotYellow">
+      <Set name="NaoColor" value="yellow"/>
+    </Body>
+    <Body ref="Nao" name="robotWhite">
+      <Set name="NaoColor" value="white"/>
+    </Body>
+    <Body ref="Nao" name="robotGreen">
+      <Set name="NaoColor" value="green"/>
+    </Body>
+    <Body ref="Nao" name="robotOrange">
+      <Set name="NaoColor" value="orange"/>
+    </Body>
+    <Body ref="Nao" name="robotPurple">
+      <Set name="NaoColor" value="purple"/>
+    </Body>
+    <Body ref="Nao" name="robotBrown">
+      <Set name="NaoColor" value="brown"/>
+    </Body>
+    <Body ref="Nao" name="robotGray">
+      <Set name="NaoColor" value="gray"/>
+    </Body>
+
+    <Body ref="K1" name="k1Blue">
+      <Set name="TeamColor" value="blue"/>
+    </Body>
+    <Body ref="K1" name="k1Red">
+      <Set name="TeamColor" value="red"/>
+    </Body>
+    <Body ref="K1" name="k1Black">
+      <Set name="TeamColor" value="black"/>
+    </Body>
+    <Body ref="K1" name="k1Yellow">
+      <Set name="TeamColor" value="yellow"/>
+    </Body>
+    <Body ref="K1" name="k1White">
+      <Set name="TeamColor" value="white"/>
+    </Body>
+    <Body ref="K1" name="k1Green">
+      <Set name="TeamColor" value="green"/>
+    </Body>
+    <Body ref="K1" name="k1Orange">
+      <Set name="TeamColor" value="orange"/>
+    </Body>
+    <Body ref="K1" name="k1Purple">
+      <Set name="TeamColor" value="purple"/>
+    </Body>
+    <Body ref="K1" name="k1Brown">
+      <Set name="TeamColor" value="brown"/>
+    </Body>
+    <Body ref="K1" name="k1Gray">
+      <Set name="TeamColor" value="gray"/>
+    </Body>
+
+    <Body name="ballFifa1" ref="ballFifa1">
+      <Translation z="0.0765m" />
+    </Body>
+
+    <Body name="ballFifa3" ref="ballFifa3">
+      <Translation z="0.095m" />
+    </Body>
+
+    <Body name="ballFifa5" ref="ballFifa5">
+      <Translation z="0.11m" />
+    </Body>
+
+    <Compound name="fieldHSLS">
+      <Compound ref="fieldHSLS" />
+    </Compound>
+
+    <Compound name="fieldHSLM">
+      <Compound ref="fieldHSLM" />
+    </Compound>
+
+    <Compound name="fieldHSLL">
+      <Compound ref="fieldHSLL" />
+    </Compound>
+  </Scene>
+</Simulation>
