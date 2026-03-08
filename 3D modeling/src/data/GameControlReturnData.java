@@ -122,9 +122,9 @@ public class GameControlReturnData implements Serializable {
                     fallen = fallenState != 0;
                     fallenValid = fallenState == 0 || fallenState == 1;
 
-                    pose[0] = buffer.getFloat();
-                    pose[1] = buffer.getFloat();
-                    pose[2] = buffer.getFloat();
+                    pose[0] = buffer.getFloat() * 1000f; // m → mm (robot sends meters, 3D modeling expects mm)
+                    pose[1] = buffer.getFloat() * 1000f; // m → mm
+                    pose[2] = buffer.getFloat();          // theta: radians (no conversion needed)
                     if (!Float.isNaN(pose[0]) && !Float.isNaN(pose[1]) && !Float.isNaN(pose[2])) {
                         poseValid = true;
                     }
