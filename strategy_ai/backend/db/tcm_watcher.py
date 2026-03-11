@@ -38,7 +38,7 @@ class _LogHandler:
         try:
             files = [
                 f for f in os.listdir(self.log_dir)
-                if f.endswith(".log")
+                if f.endswith(".log") or f.endswith(".rrd")
             ]
         except FileNotFoundError:
             return
@@ -56,7 +56,22 @@ class _LogHandler:
             if fsize < 1024:
                 continue
 
-            result = import_log_file(fpath, force=False)
+            if fname.endswith(".log"):
+                result = import_log_file(fpath, force=False)
+            else: # .rrd
+                from db.rerun_importer import import_rrd_file
+                from db.tcm_db import get_connection
+                # We need a match_id to link RRD. Usually RRD and LOG have similar timestamps.
+                # For now, we'll look for the most recent match in the DB.
+                con = get_connection()
+                row = con.execute("SELECT id FROM matches ORDER BY date DESC LIMIT 1").fetchone()
+                con.close()
+                if row:
+                    import_rrd_file(fpath, row["id"])
+                    result = "imported"
+                else:
+                    result = "skipped"
+
             if result in ("imported", "skipped", "empty"):
                 self._seen.add(fname)
                 if result == "imported":

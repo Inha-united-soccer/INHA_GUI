@@ -1,641 +1,985 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INHA Strategy AI — RoboCup</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg0: #050a12;
-  --bg1: #0c1524;
-  --bg2: #111e33;
-  --bg3: #182740;
-  --accent: #00e5b0;
-  --accent2: #38bdf8;
-  --danger: #f43f5e;
-  --warn: #fb923c;
-  --text: #e2e8f0;
-  --muted: #64748b;
-  --glass: rgba(255,255,255,0.04);
-  --border: rgba(255,255,255,0.08);
-  --glow: 0 0 20px rgba(0,229,176,0.15);
-  --glow2: 0 0 30px rgba(56,189,248,0.2);
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg0);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-/* ── Header ── */
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px;
-  background: linear-gradient(90deg, var(--bg1), var(--bg2));
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-}
-.logo { display: flex; align-items: center; gap: 10px; }
-.logo-icon {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-.logo-text { font-size: 18px; font-weight: 700; color: var(--text); }
-.logo-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
-.header-right { display: flex; align-items: center; gap: 16px; }
-.status-pill {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: 20px;
-  background: var(--glass); border: 1px solid var(--border);
-  font-size: 13px; font-weight: 500;
-}
-.dot { width: 8px; height: 8px; border-radius: 50%; }
-.dot-live { background: var(--accent); animation: pulse 1.5s infinite; }
-.dot-off  { background: var(--muted); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-.score-board {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 16px; border-radius: 20px;
-  background: var(--glass); border: 1px solid var(--border);
-}
-.score-val { font-size: 22px; font-weight: 800; font-family: 'JetBrains Mono'; }
-.score-us  { color: var(--accent); }
-.score-sep { color: var(--muted); font-size: 16px; }
-.score-opp { color: var(--accent2); }
-.timer { font-family: 'JetBrains Mono'; font-size: 14px; color: var(--warn); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INHA Strategy AI — RoboCup</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg0: #FFFFFF;
+      --bg1: #F8F9FA;
+      --bg2: #E9ECEF;
+      --bg3: #DEE2E6;
+      --accent: #736372;
+      --accent2: #7A918D;
+      --danger: #736372;
+      --warn: #7A918D;
+      --text: #333333;
+      --muted: #888888;
+      --glass: rgba(0, 0, 0, 0.03);
+      --border: rgba(0, 0, 0, 0.1);
+      --glow: 0 0 20px rgba(115, 99, 114, 0.15);
+      --glow2: 0 0 30px rgba(122, 145, 141, 0.2);
+    }
 
-/* ── Layout ── */
-.main { display: grid; grid-template-columns: 320px 1fr 300px; gap: 16px; padding: 16px; height: calc(100vh - 65px); }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* ── Card ── */
-.card {
-  background: var(--bg1);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  display: flex; flex-direction: column;
-}
-.card-header {
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.card-title { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; text-transform: uppercase; }
-.card-body { padding: 14px; flex: 1; overflow-y: auto; }
-.card-body::-webkit-scrollbar { width: 4px; }
-.card-body::-webkit-scrollbar-track { background: transparent; }
-.card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg0);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-/* ── Field Minimap ── */
-#fieldCanvas {
-  width: 100%; aspect-ratio: 3/2;
-  border-radius: 8px;
-  background: #0a3320;
-  border: 1px solid rgba(0,229,176,0.2);
-}
-.legend { display: flex; gap: 12px; margin-top: 8px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-.opp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-.stat-box {
-  background: var(--glass); border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px;
-  text-align: center;
-}
-.stat-val { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono'; color: var(--accent2); }
-.stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: linear-gradient(90deg, var(--bg1), var(--bg2));
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-/* ── AI Analysis Panel ── */
-.col-center { display: flex; flex-direction: column; gap: 12px; }
-.analyze-btn {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border: none; border-radius: 12px;
-  color: #050a12; font-size: 15px; font-weight: 700;
-  cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.analyze-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-.analyze-btn:active { transform: translateY(0); }
-.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.analysis-output {
-  flex: 1; background: var(--bg2);
-  border-radius: 12px; padding: 16px;
-  font-size: 14px; line-height: 1.7;
-  overflow-y: auto; border: 1px solid var(--border);
-  white-space: pre-wrap;
-}
-.analysis-output::-webkit-scrollbar { width: 4px; }
-.analysis-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.analysis-empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: 100%; color: var(--muted); gap: 12px;
-}
-.analysis-empty .icon { font-size: 48px; opacity: 0.4; }
-.meta-bar {
-  display: flex; gap: 8px; flex-wrap: wrap;
-}
-.badge {
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 12px; font-weight: 500;
-  background: var(--glass); border: 1px solid var(--border);
-}
-.badge.state-playing { border-color: var(--accent); color: var(--accent); }
-.badge.state-initial, .badge.state-ready, .badge.state-set { border-color: var(--warn); color: var(--warn); }
-.badge.state-finished { border-color: var(--muted); color: var(--muted); }
-.badge-rag { border-color: var(--accent2); color: var(--accent2); }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-/* ── Memo Panel ── */
-.col-right { display: flex; flex-direction: column; gap: 0; }
-.col-right .card { flex: 1; }
-.form-group { margin-bottom: 14px; }
-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
-input[type=text], input[type=number], select, textarea {
-  width: 100%; padding: 9px 12px;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif;
-  font-size: 13px; outline: none; transition: border-color 0.2s;
-}
-input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-select option { background: var(--bg2); }
-textarea { resize: vertical; min-height: 80px; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.half-time-btn {
-  width: 100%; padding: 12px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  border: none; border-radius: 10px;
-  color: white; font-size: 14px; font-weight: 700;
-  cursor: pointer; transition: opacity 0.2s;
-  margin-top: 4px;
-}
-.half-time-btn:hover { opacity: 0.9; }
-.score-timeline { margin-top: 12px; }
-.timeline-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px;
-}
-.timeline-time { font-family: 'JetBrains Mono'; color: var(--warn); min-width: 40px; }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
 
-/* ── Loading ── */
-.spinner {
-  width: 20px; height: 20px;
-  border: 2px solid rgba(0,229,176,0.3);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
 
-/* ── Markdown-like formatting ── */
-.analysis-output strong, .analysis-output b {
-  color: var(--accent); font-weight: 600;
-}
+    .logo-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
 
-/* ── Toast ── */
-#toast {
-  position: fixed; bottom: 20px; right: 20px;
-  background: var(--bg3); border: 1px solid var(--accent);
-  border-radius: 10px; padding: 12px 18px;
-  font-size: 13px; color: var(--accent);
-  opacity: 0; transform: translateY(10px);
-  transition: all 0.3s; pointer-events: none; z-index: 999;
-}
-#toast.show { opacity: 1; transform: translateY(0); }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
-/* ── Opponent formation indicator ── */
-.formation-bar {
-  display: flex; align-items: center; gap: 8px; margin-top: 10px;
-}
-.formation-label { font-size: 12px; color: var(--muted); min-width: 50px; }
-.formation-track {
-  flex: 1; height: 6px; background: var(--bg3);
-  border-radius: 3px; overflow: hidden;
-}
-.formation-fill {
-  height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  transition: width 0.5s;
-}
-</style>
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-live {
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    .dot-off {
+      background: var(--muted);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    .score-board {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+    }
+
+    .score-val {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono';
+    }
+
+    .score-us {
+      color: var(--accent);
+    }
+
+    .score-sep {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .score-opp {
+      color: var(--accent2);
+    }
+
+    .timer {
+      font-family: 'JetBrains Mono';
+      font-size: 14px;
+      color: var(--warn);
+    }
+
+    /* ── Layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 320px 1fr 300px;
+      gap: 16px;
+      padding: 16px;
+      height: calc(100vh - 65px);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .card-body {
+      padding: 14px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .card-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .card-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .card-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* ── Field Minimap ── */
+    #fieldCanvas {
+      width: 100%;
+      aspect-ratio: 3/2;
+      border-radius: 8px;
+      background: #FFFFFF;
+      border: 1px solid rgba(170, 192, 170, 0.3);
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .opp-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-box {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono';
+      color: var(--accent2);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── AI Analysis Panel ── */
+    .col-center {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .analyze-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .analyze-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .analyze-btn:active {
+      transform: translateY(0);
+    }
+
+    .analyze-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .analysis-output {
+      flex: 1;
+      background: var(--bg2);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+    }
+
+    .analysis-output::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .analysis-output::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .analysis-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      gap: 12px;
+    }
+
+    .analysis-empty .icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+
+    .meta-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--glass);
+      border: 1px solid var(--border);
+    }
+
+    .badge.state-playing {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .badge.state-initial,
+    .badge.state-ready,
+    .badge.state-set {
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+
+    .badge.state-finished {
+      border-color: var(--muted);
+      color: var(--muted);
+    }
+
+    .badge-rag {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    /* ── Memo Panel ── */
+    .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .col-right .card {
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input[type=text],
+    input[type=number],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    select option {
+      background: var(--bg2);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .half-time-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--danger);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    .half-time-btn:hover {
+      opacity: 0.9;
+    }
+
+    .score-timeline {
+      margin-top: 12px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .timeline-time {
+      font-family: 'JetBrains Mono';
+      color: var(--warn);
+      min-width: 40px;
+    }
+
+    /* ── Loading ── */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(115, 99, 114, 0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── Markdown-like formatting ── */
+    .analysis-output strong,
+    .analysis-output b {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--bg3);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--accent);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Opponent formation indicator ── */
+    .formation-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .formation-label {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 50px;
+    }
+
+    .formation-track {
+      flex: 1;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .formation-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transition: width 0.5s;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">⚽</div>
-    <div>
-      <div class="logo-text">INHA Strategy AI</div>
-      <div class="logo-sub">RoboCup 실시간 전략 분석</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="score-board">
-      <span class="score-val score-us" id="scoreUs">0</span>
-      <span class="score-sep">:</span>
-      <span class="score-val score-opp" id="scoreOpp">0</span>
-    </div>
-    <div class="status-pill">
-      <div class="dot dot-live" id="gcDot"></div>
-      <span id="gcState">대기중</span>
-      <span class="timer" id="timer">--:--</span>
-    </div>
-    <div class="status-pill">
-      <span id="ragCount">📚 0</span>
-      <span style="color:var(--muted);font-size:11px">로그</span>
-    </div>
-  </div>
-</header>
-
-<div class="main">
-  <!-- ── LEFT: Minimap ── -->
-  <div style="display:flex;flex-direction:column;gap:12px;">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">📍 실시간 필드</span>
-        <span id="robotCount" style="font-size:12px;color:var(--muted)">로봇 0명</span>
-      </div>
-      <div class="card-body">
-        <canvas id="fieldCanvas"></canvas>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#00e5b0"></div>우리팀</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>상대팀</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>공</div>
-        </div>
-        <div class="formation-bar">
-          <span class="formation-label">포메이션</span>
-          <div class="formation-track"><div class="formation-fill" id="formationFill" style="width:50%"></div></div>
-          <span id="formationLabel" style="font-size:12px;color:var(--accent);min-width:60px;text-align:right">분석중</span>
-        </div>
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚽</div>
+      <div>
+        <div class="logo-text">INHA Strategy AI</div>
+        <div class="logo-sub">RoboCup 실시간 전략 분석</div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card-header"><span class="card-title">📊 상대 분석</span></div>
-      <div class="card-body">
-        <div class="opp-stats">
-          <div class="stat-box">
-            <div class="stat-val" id="oppCount">0</div>
-            <div class="stat-label">감지 로봇</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-val" id="oppFallen" style="color:var(--danger)">0</div>
-            <div class="stat-label">Fallen</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-val" id="oppPenalty" style="color:var(--warn)">0</div>
-            <div class="stat-label">패널티</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-val" id="msgBudget" style="color:var(--accent2)">-</div>
-            <div class="stat-label">통신 잔여</div>
-          </div>
-        </div>
-        <div id="scoreTimeline" class="score-timeline"></div>
+    <div class="header-right">
+      <div class="score-board">
+        <span class="score-val score-us" id="scoreUs">0</span>
+        <span class="score-sep">:</span>
+        <span class="score-val score-opp" id="scoreOpp">0</span>
+      </div>
+      <div class="status-pill">
+        <div class="dot dot-live" id="gcDot"></div>
+        <span id="gcState">대기중</span>
+        <span class="timer" id="timer">--:--</span>
+      </div>
+      <div class="status-pill">
+        <span id="ragCount">📚 0</span>
+        <span style="color:var(--muted);font-size:11px">로그</span>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- ── CENTER: AI Analysis ── -->
-  <div class="col-center">
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <div class="meta-bar" id="metaBar">
-        <span class="badge" id="stateBadge">UNKNOWN</span>
-        <span class="badge" id="halfBadge">전반</span>
-        <span class="badge badge-rag" id="ragBadge">RAG 0개</span>
-      </div>
-    </div>
-
-    <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
-      <span id="analyzeBtnIcon">🤖</span>
-      <span id="analyzeBtnText">AI 전략 분석 실행</span>
-    </button>
-    <button class="half-time-btn" onclick="runHalftimeAnalysis()">⏱️ 하프타임 심층 분석</button>
-
-    <div class="analysis-output" id="analysisOutput">
-      <div class="analysis-empty">
-        <div class="icon">🧠</div>
-        <div>AI 분석 대기 중</div>
-        <div style="font-size:12px;color:var(--muted)">메모를 입력하고 분석을 실행하면<br>실시간 데이터 기반 전략을 제시합니다</div>
-      </div>
-    </div>
-
-    <div style="font-size:11px;color:var(--muted);text-align:right" id="lastAnalysisTime"></div>
-  </div>
-
-  <!-- ── RIGHT: Memo ── -->
-  <div class="col-right">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">📝 코치 메모</span>
-        <span style="font-size:11px;color:var(--muted)">관찰 입력</span>
-      </div>
-      <div class="card-body">
-        <div class="form-group">
-          <label>상대팀 이름</label>
-          <input type="text" id="opponentName" placeholder="예: Northern Bites">
+  <div class="main">
+    <!-- ── LEFT: Minimap ── -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📍 실시간 필드</span>
+          <span id="robotCount" style="font-size:12px;color:var(--muted)">로봇 0명</span>
         </div>
-        <div class="form-group">
-          <label>수비 스타일</label>
-          <select id="defenseStyle">
-            <option value="">선택...</option>
-            <option value="박스 수비">박스 수비 (지역 방어)</option>
-            <option value="고압 압박">고압 압박</option>
-            <option value="1대1 마크">1대1 마크</option>
-            <option value="중앙 집중">중앙 집중 수비</option>
-            <option value="약한 편">수비 약한 편</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>공격 패턴</label>
-          <select id="attackPattern">
-            <option value="">선택...</option>
-            <option value="좌측 집중">좌측 집중</option>
-            <option value="우측 집중">우측 집중</option>
-            <option value="중앙 돌파">중앙 돌파</option>
-            <option value="측면 크로스">측면 크로스</option>
-            <option value="롱패스 위주">롱패스 위주</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <div class="row-2">
-            <div>
-              <label>GK 번호</label>
-              <input type="number" id="gkNumber" placeholder="1" min="1" max="20">
+        <div class="card-body">
+          <canvas id="fieldCanvas"></canvas>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#736372"></div>우리팀
             </div>
-            <div>
-              <label>GK 공격성</label>
-              <select id="gkAggression">
-                <option value="">선택...</option>
-                <option value="소극적 (골대 고수)">소극적</option>
-                <option value="보통">보통</option>
-                <option value="공격적 (박스 이탈)">공격적</option>
-              </select>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#7A918D"></div>상대팀
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#AAC0AA"></div>공
             </div>
           </div>
+          <div class="formation-bar">
+            <span class="formation-label">포메이션</span>
+            <div class="formation-track">
+              <div class="formation-fill" id="formationFill" style="width:50%"></div>
+            </div>
+            <span id="formationLabel"
+              style="font-size:12px;color:var(--accent);min-width:60px;text-align:right">분석중</span>
+          </div>
         </div>
-        <div class="form-group">
-          <label>관찰된 약점</label>
-          <input type="text" id="weakness" placeholder="예: 우측 수비 취약, GK 반응 느림">
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 상대 분석</span></div>
+        <div class="card-body">
+          <div class="opp-stats">
+            <div class="stat-box">
+              <div class="stat-val" id="oppCount">0</div>
+              <div class="stat-label">감지 로봇</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="oppFallen" style="color:var(--danger)">0</div>
+              <div class="stat-label">Fallen</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="oppPenalty" style="color:var(--warn)">0</div>
+              <div class="stat-label">패널티</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="msgBudget" style="color:var(--accent2)">-</div>
+              <div class="stat-label">통신 잔여</div>
+            </div>
+          </div>
+          <div id="scoreTimeline" class="score-timeline"></div>
         </div>
-        <div class="form-group">
-          <label>추가 메모</label>
-          <textarea id="notes" placeholder="자유롭게 관찰 내용 입력&#10;예: 3번 로봇이 자주 넘어짐&#10;킥 방향이 항상 오른쪽"></textarea>
+      </div>
+    </div>
+
+    <!-- ── CENTER: AI Analysis ── -->
+    <div class="col-center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="meta-bar" id="metaBar">
+          <span class="badge" id="stateBadge">UNKNOWN</span>
+          <span class="badge" id="halfBadge">전반</span>
+          <span class="badge badge-rag" id="ragBadge">RAG 0개</span>
+        </div>
+      </div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+        <span id="analyzeBtnIcon">🤖</span>
+        <span id="analyzeBtnText">AI 전략 분석 실행</span>
+      </button>
+      <button class="half-time-btn" onclick="runHalftimeAnalysis()">⏱️ 하프타임 심층 분석</button>
+
+      <div class="analysis-output" id="analysisOutput">
+        <div class="analysis-empty">
+          <div class="icon">🧠</div>
+          <div>AI 분석 대기 중</div>
+          <div style="font-size:12px;color:var(--muted)">메모를 입력하고 분석을 실행하면<br>실시간 데이터 기반 전략을 제시합니다</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--muted);text-align:right" id="lastAnalysisTime"></div>
+    </div>
+
+    <!-- ── RIGHT: Memo ── -->
+    <div class="col-right">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📝 코치 메모</span>
+          <span style="font-size:11px;color:var(--muted)">관찰 입력</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>상대팀 이름</label>
+            <input type="text" id="opponentName" placeholder="예: Northern Bites">
+          </div>
+          <div class="form-group">
+            <label>수비 스타일</label>
+            <select id="defenseStyle">
+              <option value="">선택...</option>
+              <option value="박스 수비">박스 수비 (지역 방어)</option>
+              <option value="고압 압박">고압 압박</option>
+              <option value="1대1 마크">1대1 마크</option>
+              <option value="중앙 집중">중앙 집중 수비</option>
+              <option value="약한 편">수비 약한 편</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>공격 패턴</label>
+            <select id="attackPattern">
+              <option value="">선택...</option>
+              <option value="좌측 집중">좌측 집중</option>
+              <option value="우측 집중">우측 집중</option>
+              <option value="중앙 돌파">중앙 돌파</option>
+              <option value="측면 크로스">측면 크로스</option>
+              <option value="롱패스 위주">롱패스 위주</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="row-2">
+              <div>
+                <label>GK 번호</label>
+                <input type="number" id="gkNumber" placeholder="1" min="1" max="20">
+              </div>
+              <div>
+                <label>GK 공격성</label>
+                <select id="gkAggression">
+                  <option value="">선택...</option>
+                  <option value="소극적 (골대 고수)">소극적</option>
+                  <option value="보통">보통</option>
+                  <option value="공격적 (박스 이탈)">공격적</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>관찰된 약점</label>
+            <input type="text" id="weakness" placeholder="예: 우측 수비 취약, GK 반응 느림">
+          </div>
+          <div class="form-group">
+            <label>추가 메모</label>
+            <textarea id="notes" placeholder="자유롭게 관찰 내용 입력&#10;예: 3번 로봇이 자주 넘어짐&#10;킥 방향이 항상 오른쪽"></textarea>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div id="toast">✅ 분석 완료</div>
+  <div id="toast">✅ 분석 완료</div>
 
-<script>
-const API = 'http://localhost:8001';
-let liveData = null;
+  <script>
+    const API = 'http://localhost:8001';
+    let liveData = null;
 
-// ── Field Canvas ──────────────────────────────────────────────────────────────
-const canvas = document.getElementById('fieldCanvas');
-const ctx = canvas.getContext('2d');
-const FIELD_W = 9000, FIELD_H = 6000;
+    // ── Field Canvas ──────────────────────────────────────────────────────────────
+    const canvas = document.getElementById('fieldCanvas');
+    const ctx = canvas.getContext('2d');
+    const FIELD_W = 9000, FIELD_H = 6000;
 
-function resizeCanvas() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width - 28;
-  canvas.height = canvas.width * (2/3);
-}
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width - 28;
+      canvas.height = canvas.width * (2 / 3);
+    }
 
-function toCanvas(x, y) {
-  const cx = canvas.width / 2  + (x / FIELD_W) * canvas.width;
-  const cy = canvas.height / 2 - (y / FIELD_H) * canvas.height;
-  return [cx, cy];
-}
+    function toCanvas(x, y) {
+      const cx = canvas.width / 2 + (x / FIELD_W) * canvas.width;
+      const cy = canvas.height / 2 - (y / FIELD_H) * canvas.height;
+      return [cx, cy];
+    }
 
-function drawField() {
-  const W = canvas.width, H = canvas.height;
-  // Background
-  ctx.fillStyle = '#082a18';
-  ctx.fillRect(0, 0, W, H);
-  // Stripes
-  for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = i % 2 === 0 ? '#082a18' : '#0a3320';
-    ctx.fillRect(i * W/6, 0, W/6, H);
-  }
-  // Lines
-  ctx.strokeStyle = 'rgba(0,229,176,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(4, 4, W-8, H-8);
-  // Center
-  ctx.beginPath(); ctx.moveTo(W/2, 4); ctx.lineTo(W/2, H-4); ctx.stroke();
-  // Center circle
-  ctx.beginPath(); ctx.arc(W/2, H/2, H*0.15, 0, Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(W/2, H/2, 3, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(0,229,176,0.6)'; ctx.fill();
-  // Penalty areas
-  const pw = W*0.15, ph = H*0.5;
-  ctx.strokeRect(4, (H-ph)/2, pw, ph);
-  ctx.strokeRect(W-4-pw, (H-ph)/2, pw, ph);
-  // Penalty dots
-  ctx.beginPath(); ctx.arc(W*0.12, H/2, 3, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(W*0.88, H/2, 3, 0, Math.PI*2); ctx.fill();
-}
-
-function drawRobots(robots) {
-  if (!robots) return;
-  robots.forEach(r => {
-    const [cx, cy] = toCanvas(r.x, r.y);
-    const isOurs = r.is_ours;
-    const fallen = r.fallen;
-
-    // Shadow
-    ctx.beginPath();
-    ctx.arc(cx, cy, fallen ? 12 : 9, 0, Math.PI*2);
-    ctx.fillStyle = isOurs ? 'rgba(0,229,176,0.15)' : 'rgba(244,63,94,0.15)';
-    ctx.fill();
-
-    // Body
-    ctx.beginPath();
-    ctx.arc(cx, cy, fallen ? 8 : 7, 0, Math.PI*2);
-    ctx.fillStyle = fallen ? '#64748b' : (isOurs ? '#00e5b0' : '#f43f5e');
-    ctx.fill();
-
-    // Player number
-    ctx.fillStyle = '#050a12';
-    ctx.font = `bold ${fallen ? '8' : '7'}px JetBrains Mono`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(r.player, cx, cy);
-
-    // Direction arrow
-    if (!fallen && r.theta !== undefined) {
-      const arrowLen = 14;
-      ctx.strokeStyle = isOurs ? 'rgba(0,229,176,0.7)' : 'rgba(244,63,94,0.7)';
+    function drawField() {
+      const W = canvas.width, H = canvas.height;
+      // Background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, W, H);
+      // Stripes
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#F8F9FA' : '#FFFFFF';
+        ctx.fillRect(i * W / 6, 0, W / 6, H);
+      }
+      // Lines
+      ctx.strokeStyle = '#AAC0AA';
       ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(r.theta) * arrowLen, cy - Math.sin(r.theta) * arrowLen);
-      ctx.stroke();
+      ctx.strokeRect(4, 4, W - 8, H - 8);
+      // Center
+      ctx.beginPath(); ctx.moveTo(W / 2, 4); ctx.lineTo(W / 2, H - 4); ctx.stroke();
+      // Center circle
+      ctx.beginPath(); ctx.arc(W / 2, H / 2, H * 0.15, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(W / 2, H / 2, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#AAC0AA'; ctx.fill();
+      // Penalty areas
+      const pw = W * 0.15, ph = H * 0.5;
+      ctx.strokeRect(4, (H - ph) / 2, pw, ph);
+      ctx.strokeRect(W - 4 - pw, (H - ph) / 2, pw, ph);
+      // Penalty dots
+      ctx.beginPath(); ctx.arc(W * 0.12, H / 2, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W * 0.88, H / 2, 3, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Ball indicator
-    if (r.ball_age >= 0 && r.ball_age < 2.0) {
-      const [bx, by] = toCanvas(r.x + r.ball_x, r.y + r.ball_y);
-      ctx.beginPath(); ctx.arc(bx, by, 4, 0, Math.PI*2);
-      ctx.fillStyle = '#fbbf24'; ctx.fill();
+    function drawRobots(robots) {
+      if (!robots) return;
+      robots.forEach(r => {
+        const [cx, cy] = toCanvas(r.x, r.y);
+        const isOurs = r.is_ours;
+        const fallen = r.fallen;
+
+        // Shadow
+        ctx.beginPath();
+        ctx.arc(cx, cy, fallen ? 12 : 9, 0, Math.PI * 2);
+        ctx.fillStyle = isOurs ? 'rgba(115,99,114,0.15)' : 'rgba(122,145,141,0.15)';
+        ctx.fill();
+
+        // Body
+        ctx.beginPath();
+        ctx.arc(cx, cy, fallen ? 8 : 7, 0, Math.PI * 2);
+        ctx.fillStyle = fallen ? '#CCCCCC' : (isOurs ? '#736372' : '#7A918D');
+        ctx.fill();
+
+        // Player number
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = `bold ${fallen ? '8' : '7'}px JetBrains Mono`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(r.player, cx, cy);
+
+        // Direction arrow
+        if (!fallen && r.theta !== undefined) {
+          const arrowLen = 14;
+          ctx.strokeStyle = isOurs ? 'rgba(115,99,114,0.8)' : 'rgba(122,145,141,0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(r.theta) * arrowLen, cy - Math.sin(r.theta) * arrowLen);
+          ctx.stroke();
+        }
+
+        // Ball indicator
+        if (r.ball_age >= 0 && r.ball_age < 2.0) {
+          const [bx, by] = toCanvas(r.x + r.ball_x, r.y + r.ball_y);
+          ctx.beginPath(); ctx.arc(bx, by, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#AAC0AA'; ctx.fill();
+        }
+      });
     }
-  });
-}
 
-function render(robots) {
-  resizeCanvas();
-  drawField();
-  drawRobots(robots);
-}
+    function render(robots) {
+      resizeCanvas();
+      drawField();
+      drawRobots(robots);
+    }
 
-// ── Live Data Polling ─────────────────────────────────────────────────────────
-async function fetchLive() {
-  try {
-    const r = await fetch(`${API}/api/live`);
-    liveData = await r.json();
-    updateUI(liveData);
-  } catch(e) {
-    document.getElementById('gcDot').className = 'dot dot-off';
-  }
-}
+    // ── Live Data Polling ─────────────────────────────────────────────────────────
+    async function fetchLive() {
+      try {
+        const r = await fetch(`${API}/api/live`);
+        liveData = await r.json();
+        updateUI(liveData);
+      } catch (e) {
+        document.getElementById('gcDot').className = 'dot dot-off';
+      }
+    }
 
-function updateUI(data) {
-  const gc = data.gc || {};
-  const teams = gc.teams || [];
-  const opp = data.opponent_summary || {};
-  const scores = data.score_history || [];
+    function updateUI(data) {
+      const gc = data.gc || {};
+      const teams = gc.teams || [];
+      const opp = data.opponent_summary || {};
+      const scores = data.score_history || [];
 
-  // Header
-  document.getElementById('gcDot').className = 'dot dot-live';
-  const state = gc.state || 'UNKNOWN';
-  document.getElementById('gcState').textContent = state;
-  const secs = gc.secsRemaining || 0;
-  document.getElementById('timer').textContent = `${Math.floor(secs/60).toString().padStart(2,'0')}:${(secs%60).toString().padStart(2,'0')}`;
-  document.getElementById('ragCount').textContent = `📚 ${data.rag_logs || 0}`;
+      // Header
+      document.getElementById('gcDot').className = 'dot dot-live';
+      const state = gc.state || 'UNKNOWN';
+      document.getElementById('gcState').textContent = state;
+      const secs = gc.secsRemaining || 0;
+      document.getElementById('timer').textContent = `${Math.floor(secs / 60).toString().padStart(2, '0')}:${(secs % 60).toString().padStart(2, '0')}`;
+      document.getElementById('ragCount').textContent = `📚 ${data.rag_logs || 0}`;
 
-  // Score
-  const ourTeam = teams.find(t => t.teamNumber === 13);
-  const oppTeam = teams.find(t => t.teamNumber !== 13);
-  document.getElementById('scoreUs').textContent  = ourTeam?.score ?? 0;
-  document.getElementById('scoreOpp').textContent = oppTeam?.score ?? 0;
+      // Score
+      const ourTeam = teams.find(t => t.teamNumber === 13);
+      const oppTeam = teams.find(t => t.teamNumber !== 13);
+      document.getElementById('scoreUs').textContent = ourTeam?.score ?? 0;
+      document.getElementById('scoreOpp').textContent = oppTeam?.score ?? 0;
 
-  // State badge
-  const badge = document.getElementById('stateBadge');
-  badge.textContent = state;
-  badge.className = `badge state-${state.toLowerCase()}`;
-  document.getElementById('halfBadge').textContent = gc.half === 2 ? '후반' : '전반';
-  document.getElementById('ragBadge').textContent  = `RAG ${data.rag_logs || 0}개`;
+      // State badge
+      const badge = document.getElementById('stateBadge');
+      badge.textContent = state;
+      badge.className = `badge state-${state.toLowerCase()}`;
+      document.getElementById('halfBadge').textContent = gc.half === 2 ? '후반' : '전반';
+      document.getElementById('ragBadge').textContent = `RAG ${data.rag_logs || 0}개`;
 
-  // Opponent stats
-  document.getElementById('oppCount').textContent = opp.count ?? 0;
-  document.getElementById('oppFallen').textContent = opp.fallen_count ?? 0;
-  document.getElementById('oppPenalty').textContent = oppTeam?.penaltyCount ?? 0;
-  const msgB = oppTeam?.messageBudget;
-  document.getElementById('msgBudget').textContent = msgB !== undefined ? msgB : '-';
+      // Opponent stats
+      document.getElementById('oppCount').textContent = opp.count ?? 0;
+      document.getElementById('oppFallen').textContent = opp.fallen_count ?? 0;
+      document.getElementById('oppPenalty').textContent = oppTeam?.penaltyCount ?? 0;
+      const msgB = oppTeam?.messageBudget;
+      document.getElementById('msgBudget').textContent = msgB !== undefined ? msgB : '-';
 
-  // Formation
-  const avgX = opp.avg_x || 0;
-  const pct = Math.min(100, Math.max(0, 50 + avgX/90));
-  document.getElementById('formationFill').style.width = pct + '%';
-  document.getElementById('formationLabel').textContent = opp.formation || '분석중';
+      // Formation
+      const avgX = opp.avg_x || 0;
+      const pct = Math.min(100, Math.max(0, 50 + avgX / 90));
+      document.getElementById('formationFill').style.width = pct + '%';
+      document.getElementById('formationLabel').textContent = opp.formation || '분석중';
 
-  // Robot count
-  document.getElementById('robotCount').textContent = `로봇 ${(data.robots || []).length}명`;
+      // Robot count
+      document.getElementById('robotCount').textContent = `로봇 ${(data.robots || []).length}명`;
 
-  // Field
-  render(data.robots || []);
+      // Field
+      render(data.robots || []);
 
-  // Score timeline
-  const tl = document.getElementById('scoreTimeline');
-  if (scores.length > 0) {
-    tl.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">골 기록</div>' +
-      scores.slice(-5).reverse().map(s => {
-        const t = s.time, m = Math.floor(t/60), sec = t%60;
-        return `<div class="timeline-item">
-          <span class="timeline-time">${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}</span>
+      // Score timeline
+      const tl = document.getElementById('scoreTimeline');
+      if (scores.length > 0) {
+        tl.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">골 기록</div>' +
+          scores.slice(-5).reverse().map(s => {
+            const t = s.time, m = Math.floor(t / 60), sec = t % 60;
+            return `<div class="timeline-item">
+          <span class="timeline-time">${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}</span>
           <span>팀 ${s.team} 득점 → ${s.score}점</span>
         </div>`;
-      }).join('');
-  }
-}
+          }).join('');
+      }
+    }
 
-// ── AI Analysis ───────────────────────────────────────────────────────────────
-function getMemo() {
-  return {
-    opponent_name:  document.getElementById('opponentName').value,
-    defense_style:  document.getElementById('defenseStyle').value,
-    attack_pattern: document.getElementById('attackPattern').value,
-    gk_number:      parseInt(document.getElementById('gkNumber').value) || 0,
-    gk_aggression:  document.getElementById('gkAggression').value,
-    weakness:       document.getElementById('weakness').value,
-    notes:          document.getElementById('notes').value,
-  };
-}
+    // ── AI Analysis ───────────────────────────────────────────────────────────────
+    function getMemo() {
+      return {
+        opponent_name: document.getElementById('opponentName').value,
+        defense_style: document.getElementById('defenseStyle').value,
+        attack_pattern: document.getElementById('attackPattern').value,
+        gk_number: parseInt(document.getElementById('gkNumber').value) || 0,
+        gk_aggression: document.getElementById('gkAggression').value,
+        weakness: document.getElementById('weakness').value,
+        notes: document.getElementById('notes').value,
+      };
+    }
 
-function setAnalyzing(flag) {
-  const btn = document.getElementById('analyzeBtn');
-  btn.disabled = flag;
-  document.getElementById('analyzeBtnIcon').innerHTML = flag ? '<div class="spinner"></div>' : '🤖';
-  document.getElementById('analyzeBtnText').textContent = flag ? 'AI 분석 중...' : 'AI 전략 분석 실행';
-}
+    function setAnalyzing(flag) {
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = flag;
+      document.getElementById('analyzeBtnIcon').innerHTML = flag ? '<div class="spinner"></div>' : '🤖';
+      document.getElementById('analyzeBtnText').textContent = flag ? 'AI 분석 중...' : 'AI 전략 분석 실행';
+    }
 
-function renderAnalysis(text) {
-  // Simple markdown-like bold
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/^(#{1,3} .+)$/gm, '<strong>$1</strong>')
-    .replace(/\n/g, '<br>');
-}
+    function renderAnalysis(text) {
+      // Simple markdown-like bold
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^(#{1,3} .+)$/gm, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    }
 
-async function runAnalysis(isHalftime = false) {
-  setAnalyzing(true);
-  const memo = getMemo();
-  if (isHalftime) memo.notes = '[하프타임 심층 분석 요청]\n' + memo.notes;
+    async function runAnalysis(isHalftime = false) {
+      setAnalyzing(true);
+      const memo = getMemo();
+      if (isHalftime) memo.notes = '[하프타임 심층 분석 요청]\n' + memo.notes;
 
-  try {
-    const r = await fetch(`${API}/api/analyze`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(memo)
-    });
-    const data = await r.json();
-    const out = document.getElementById('analysisOutput');
-    out.innerHTML = renderAnalysis(data.analysis || '분석 결과 없음');
-    document.getElementById('lastAnalysisTime').textContent = `마지막 분석: ${data.timestamp || ''}`;
-    showToast('✅ AI 분석 완료');
-  } catch(e) {
-    document.getElementById('analysisOutput').innerHTML = `<span style="color:var(--danger)">서버 연결 실패: ${e.message}<br>uvicorn app:app --port 8001 으로 서버를 시작하세요</span>`;
-  } finally {
-    setAnalyzing(false);
-  }
-}
+      try {
+        const r = await fetch(`${API}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(memo)
+        });
+        const data = await r.json();
+        const out = document.getElementById('analysisOutput');
+        out.innerHTML = renderAnalysis(data.analysis || '분석 결과 없음');
+        document.getElementById('lastAnalysisTime').textContent = `마지막 분석: ${data.timestamp || ''}`;
+        showToast('✅ AI 분석 완료');
+      } catch (e) {
+        document.getElementById('analysisOutput').innerHTML = `<span style="color:var(--danger)">서버 연결 실패: ${e.message}<br>uvicorn app:app --port 8001 으로 서버를 시작하세요</span>`;
+      } finally {
+        setAnalyzing(false);
+      }
+    }
 
-function runHalftimeAnalysis() { runAnalysis(true); }
+    function runHalftimeAnalysis() { runAnalysis(true); }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-window.addEventListener('resize', () => render(liveData?.robots || []));
-resizeCanvas();
-drawField();
-fetchLive();
-setInterval(fetchLive, 1000);
-</script>
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    window.addEventListener('resize', () => render(liveData?.robots || []));
+    resizeCanvas();
+    drawField();
+    fetchLive();
+    setInterval(fetchLive, 1000);
+  </script>
 </body>
+
 </html>

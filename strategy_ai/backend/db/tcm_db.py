@@ -5,6 +5,7 @@ Tables:
   matches          — 1 row per .log file session
   robot_snapshots  — each RGrt packet parsed from the log
   match_summaries  — per-match aggregates (avg positions, formation, etc.)
+  strategy_events  — Rerun intent data (Role, Decision, etc.) synced via time
 """
 
 import sqlite3
@@ -68,6 +69,19 @@ def init_db():
             total_packets   INTEGER,
             formation       TEXT    -- '공격 집중' | '수비 집중' | '균형'
         );
+
+        CREATE TABLE IF NOT EXISTS strategy_events (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            match_id     INTEGER NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+            game_time    REAL,    -- secsRemaining from GC
+            robot_id     TEXT,    -- 'robot_1', etc.
+            event_type   TEXT,    -- 'Role', 'Possession', 'Decision', 'BallYaw', etc.
+            value        TEXT,
+            timestamp    TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_events_match ON strategy_events(match_id);
+        CREATE INDEX IF NOT EXISTS idx_events_time  ON strategy_events(game_time);
         """)
     con.close()
 
@@ -130,6 +144,35 @@ def insert_or_replace_summary(match_id: int, summary: dict):
         con.close()
 
 
+def insert_strategy_event(match_id: int, game_time: float, robot_id: str,
+                          event_type: str, value: str):
+    """Insert a single strategy/intent event."""
+    con = get_connection()
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO strategy_events(match_id, game_time, robot_id, event_type, value) "
+                "VALUES(?,?,?,?,?)",
+                (match_id, game_time, robot_id, event_type, value)
+            )
+    finally:
+        con.close()
+
+
+def insert_strategy_events_bulk(match_id: int, rows: list):
+    """Bulk insert strategy events. Row: (game_time, robot_id, event_type, value)"""
+    con = get_connection()
+    try:
+        with con:
+            con.executemany(
+                "INSERT INTO strategy_events(match_id, game_time, robot_id, event_type, value) "
+                "VALUES(?,?,?,?,?)",
+                [(match_id, *r) for r in rows]
+            )
+    finally:
+        con.close()
+
+
 # ─── Read helpers ────────────────────────────────────────────────────────────
 
 def get_db_status() -> dict:
@@ -179,7 +222,7 @@ def get_similar_situations(our_avg_x: float, score_diff: int = 0,
     con = get_connection()
     try:
         rows = con.execute("""
-            SELECT m.opponent, m.half, ms.formation,
+            SELECT m.id, m.opponent, m.half, ms.formation,
                    ROUND(ms.our_avg_x,2)  AS our_avg_x,
                    ROUND(ms.ball_avg_x,2) AS ball_avg_x,
                    ROUND(ms.our_fallen_pct*100,1) AS fallen_pct,
@@ -191,6 +234,21 @@ def get_similar_situations(our_avg_x: float, score_diff: int = 0,
             ORDER  BY m.date DESC
             LIMIT  ?
         """, (our_avg_x, limit)).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        con.close()
+
+
+def get_match_events(match_id: int) -> list[dict]:
+    """Fetch all strategy events for a match, ordered by game time."""
+    con = get_connection()
+    try:
+        rows = con.execute("""
+            SELECT game_time, robot_id, event_type, value
+            FROM   strategy_events
+            WHERE  match_id = ?
+            ORDER  BY game_time DESC
+        """, (match_id,)).fetchall()
         return [dict(r) for r in rows]
     finally:
         con.close()

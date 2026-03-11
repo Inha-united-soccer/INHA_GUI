@@ -254,9 +254,14 @@ class TCMContextBuilder:
 
     def __init__(self):
         # Import here so the DB is already initialised by tcm_db
-        from db.tcm_db import get_db_status, get_similar_situations
+        from db.tcm_db import (
+            get_db_status,
+            get_similar_situations,
+            get_match_events
+        )
         self._get_status   = get_db_status
         self._get_similar  = get_similar_situations
+        self._get_events   = get_match_events
         status = self._get_status()
         print(f"[DB] Connected — {status['total_matches']} matches, "
               f"{status['total_snapshots']} snapshots")
@@ -289,6 +294,14 @@ class TCMContextBuilder:
                     f"공avg_x={r.get('ball_avg_x','?')}mm │ "
                     f"낙상비율={r.get('fallen_pct','?')}%"
                 )
+                
+                # Fetch leading decision events for this match if any
+                match_id = r.get('id') # Need to ensure match_id is returned by get_similar_situations
+                if match_id:
+                    evs = self._get_events(match_id)
+                    if evs:
+                        events_summary = ", ".join([f"{e['event_type']}={e['value']}" for e in evs[:5]])
+                        lines.append(f"    └─ 주요 결정: {events_summary}")
         else:
             lines.append("\n현재 상황과 유사한 과거 기록 없음 (DB 데이터 부족)")
 
