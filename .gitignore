@@ -1,3 +1,27 @@
 # Firebase / GCP secrets
 *.json
 firebase-adminsdk-*.json
+
+# Virtual Environments
+.venv*/
+env/
+venv/
+ENV/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs and Data
+*.log
+*.rrd
+*.sqlite
+web_control/backend/logs/
+
+# OS files
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
